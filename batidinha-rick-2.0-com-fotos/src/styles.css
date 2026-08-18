@@ -199,6 +199,7 @@ main { min-width: 0; }.topbar { height: 84px; background: #fffdfa; border-bottom
 .build-photo::after { content: "+"; position: absolute; right: 14px; top: -32px; color: #ffffff12; font-size: 150px; font-weight: 900; }
 .build-photo > svg, .build-photo > span { position: relative; z-index: 1; }
 .cart-drawer, .checkout-card, .pizza-builder { box-shadow: 0 30px 90px #18051f45; }
+.floating-cart { display: none; }
 @media (max-width: 650px) {
   .public-header { height: 74px; }
   .category-pills { top: 74px; }
@@ -208,4 +209,10 @@ main { min-width: 0; }.topbar { height: 84px; background: #fffdfa; border-bottom
   .menu-title h2 { font-size: 30px; }
   .menu-card { border-radius: 19px; }
   .menu-photo:has(img) { height: min(72vw, 360px); }
+  .public-menu { padding-bottom: 92px; }
+  .menu-card footer button { min-width: 112px; display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .floating-cart { position: fixed; left: 14px; right: 14px; bottom: 14px; z-index: 35; min-height: 58px; padding: 10px 17px; display: flex; align-items: center; justify-content: space-between; border: 1px solid #ffffff35; border-radius: 17px; color: white; background: linear-gradient(135deg, #6e1b96, #d6259b); box-shadow: 0 18px 45px #3e0d5166; backdrop-filter: blur(10px); }
+  .floating-cart span { display: flex; align-items: center; gap: 9px; }
+  .floating-cart b { font-size: 13px; }
+  .floating-cart strong { font-size: 16px; }
 }
