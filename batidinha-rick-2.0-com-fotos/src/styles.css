@@ -213,6 +213,8 @@ main { min-width: 0; }.topbar { height: 84px; background: #fffdfa; border-bottom
 .public-footer strong, .public-footer small { display: block; }
 .public-footer small { margin-top: 3px; color: #bca6c5; font-size: 10px; }
 .public-footer button { padding: 8px 10px; display: flex; align-items: center; gap: 6px; border: 1px solid #ffffff18; border-radius: 9px; color: #bda8c6; background: #ffffff09; font-size: 10px; }
+.offline-banner { padding: 11px max(24px, calc((100vw - 1180px) / 2)); display: flex; justify-content: center; gap: 8px; color: #6b4a10; background: #fff8df; border-bottom: 1px solid #efd487; font-size: 12px; }
+.public-menu button:focus-visible, .public-menu input:focus-visible, .public-menu select:focus-visible, .public-menu textarea:focus-visible { outline: 3px solid #f4b942; outline-offset: 3px; }
 .floating-cart { display: none; }
 @media (max-width: 650px) {
   .public-header { height: 74px; }
@@ -234,4 +236,7 @@ main { min-width: 0; }.topbar { height: 84px; background: #fffdfa; border-bottom
   .floating-cart b { font-size: 13px; }
   .floating-cart strong { font-size: 16px; }
   .public-footer { padding: 25px 20px 105px; align-items: flex-start; flex-direction: column; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .public-menu *, .public-menu *::before, .public-menu *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
