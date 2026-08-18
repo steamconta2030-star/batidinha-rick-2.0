@@ -134,6 +134,13 @@ main { min-width: 0; }.topbar { height: 84px; background: #fffdfa; border-bottom
 .store-closed-banner { padding: 11px max(24px, calc((100vw - 1180px) / 2)); display: flex; justify-content: center; gap: 8px; color: #7f1d1d; background: #fef2f2; border-bottom: 1px solid #fecaca; font-size: 12px; }
 .minimum-warning { margin: 0 0 12px; padding: 9px 10px; border-radius: 9px; color: #7a1fa8; background: #f6eafa; font-size: 11px; font-weight: 800; }
 .public-menu button:disabled { cursor: not-allowed; opacity: .5; }
+.menu-search { padding: 20px max(24px, calc((100vw - 1180px) / 2)) 0; background: #fbf7f1; }
+.menu-search label { max-width: 560px; display: flex; align-items: center; gap: 9px; padding: 0 12px; border: 1px solid #dfd1e8; border-radius: 12px; background: white; color: #7a1fa8; }
+.menu-search input { width: 100%; border: 0; outline: 0; padding: 12px 0; background: transparent; font: inherit; }
+.menu-search button { border: 0; padding: 5px; display: grid; place-items: center; background: transparent; color: #806b89; }
+.menu-empty { min-height: 240px; display: grid; place-content: center; justify-items: center; gap: 8px; border: 1px dashed #d9c7e1; border-radius: 17px; color: #806b89; text-align: center; }
+.menu-empty strong { color: #4b235d; font-size: 18px; }
+.menu-empty span { max-width: 320px; font-size: 12px; }
 @media (max-width: 650px) { .store-closed-banner { align-items: center; flex-direction: column; gap: 2px; } }
 @media (max-width: 650px) {
   .public-hero { min-height: 330px; }
