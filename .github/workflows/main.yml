@@ -14,6 +14,10 @@ jobs:
     name: Verificar e compilar
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        working-directory: ./batidinha-rick-2.0-atualizado
+
     steps:
       - name: Baixar código
         uses: actions/checkout@v6
@@ -23,6 +27,7 @@ jobs:
         with:
           node-version: "22"
           cache: npm
+          cache-dependency-path: ./batidinha-rick-2.0-atualizado/package-lock.json
 
       - name: Instalar dependências
         run: npm ci
