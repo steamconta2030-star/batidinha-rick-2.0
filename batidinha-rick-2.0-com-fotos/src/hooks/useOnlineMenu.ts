@@ -38,6 +38,7 @@ function mergeLocalProducts(saved: Product[] | null): Product[] {
   const defaults = new Map(initialProducts.map((product) => [product.id, product]));
   const merged = saved.map((product) => {
     const currentDefault = defaults.get(product.id);
+    if (product.id === "combo-dupla") return { ...product, imageUrl: "" };
     return currentDefault && !product.imageUrl ? { ...product, imageUrl: currentDefault.imageUrl } : product;
   });
   const savedIds = new Set(merged.map((product) => product.id));
