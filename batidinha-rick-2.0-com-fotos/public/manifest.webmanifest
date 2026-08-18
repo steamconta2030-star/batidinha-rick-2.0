@@ -1,1 +1,1 @@
-{"name":"Batidinha do Rick","short_name":"Batidinha","start_url":"/","display":"standalone","background_color":"#fbf7f1","theme_color":"#180733","description":"Cardápio e gestão da Batidinha do Rick"}
+{"name":"Batidinha do Rick","short_name":"Batidinha","start_url":"./","scope":"./","display":"standalone","background_color":"#f8f3fa","theme_color":"#220934","description":"Cardápio online da Batidinha do Rick em Ipatinga"}
