@@ -16,6 +16,7 @@ export default function PublicMenu({ onBack }: { onBack: () => void }) {
   const [orders, setOrders] = usePersistentState<Order[]>("batidinha:orders", []);
   const [activeCategory, setActiveCategory] = useState("all");
   const [query, setQuery] = useState("");
+  const [browserOnline, setBrowserOnline] = useState(() => navigator.onLine);
   const [builderOpen, setBuilderOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
@@ -47,6 +48,16 @@ export default function PublicMenu({ onBack }: { onBack: () => void }) {
     if (!crusts.some((item) => item.id === crustId)) setCrustId(crusts[0]?.id ?? "");
     if (!zones.some((item) => item.id === checkoutZoneId)) setCheckoutZoneId(zones[0]?.id ?? initialZones[0].id);
   }, [checkoutZoneId, crustId, crusts, sizeId, sizes, zones]);
+
+  useEffect(() => {
+    const updateConnection = () => setBrowserOnline(navigator.onLine);
+    window.addEventListener("online", updateConnection);
+    window.addEventListener("offline", updateConnection);
+    return () => {
+      window.removeEventListener("online", updateConnection);
+      window.removeEventListener("offline", updateConnection);
+    };
+  }, []);
 
   function selectFlavor(id: string) {
     setFlavorIds((current) => current.includes(id) ? current.filter((item) => item !== id) : current.length >= size.maxFlavors ? [...current.slice(1), id] : [...current, id]);
@@ -120,12 +131,13 @@ export default function PublicMenu({ onBack }: { onBack: () => void }) {
 
   return <div className="public-menu">
     <header className="public-header"><div className="public-brand"><span><CupSoda size={22} /></span><div><strong>Batidinha do Rick</strong><small>{online ? `Cardápio online • ${storeOpen ? "Loja aberta" : "Loja fechada"}${minimumOrder ? ` • Mín. ${money.format(minimumOrder)}` : ""}` : "Gelada, cremosa e feita para você."}</small></div></div><button className="cart-button" onClick={() => setCartOpen(true)}><ShoppingBag size={19} /><span>{cartCount}</span><b>{money.format(cartTotal)}</b></button></header>
+    {!browserOnline && <div className="offline-banner" role="status"><strong>Você está sem internet</strong><span>O cardápio salvo continua disponível, mas o envio do pedido precisará de conexão.</span></div>}
     {!storeOpen && <div className="store-closed-banner"><strong>Loja fechada no momento</strong><span>Você pode consultar o cardápio, mas novos pedidos estão temporariamente pausados.</span></div>}
     <section className="public-hero"><div><small>🥤 BATIDINHA GELADA • ENTREGA RÁPIDA</small><h1>Sua batidinha, do seu jeito.</h1><p>Escolha seus sabores favoritos e receba geladinha em casa.</p><button disabled={!storeOpen} onClick={() => setBuilderOpen(true)}>Personalizar minha batidinha <Plus size={18} /></button></div></section>
     <section className="benefit-strip" aria-label="Diferenciais da Batidinha do Rick"><article><Sparkles size={21} /><div><strong>Feita na hora</strong><span>Cremosa e bem gelada</span></div></article><article><MapPin size={21} /><div><strong>Entrega ou retirada</strong><span>Escolha ao finalizar</span></div></article></section>
     <nav className="category-pills"><button className={activeCategory === "all" ? "active" : ""} onClick={() => setActiveCategory("all")}>Todos</button>{categories.filter((item) => item.active).map((item) => <button key={item.id} className={activeCategory === item.id ? "active" : ""} onClick={() => setActiveCategory(item.id)}>{item.name}</button>)}</nav>
     <div className="menu-search"><label><Search size={18} /><input value={query} onChange={(event) => setQuery(event.target.value)} type="search" placeholder="Buscar sabor, combo ou produto..." aria-label="Buscar no cardápio" />{query && <button aria-label="Limpar busca" onClick={() => setQuery("")}><X size={16} /></button>}</label></div>
-    <main className="menu-content"><div className="menu-title"><div><small>NOSSO CARDÁPIO</small><h2>Escolha o seu pedido</h2></div><span>{filteredProducts.length + (showBuilder ? 1 : 0)} opções disponíveis</span></div>{!filteredProducts.length && !showBuilder ? <div className="menu-empty"><Search size={34} /><strong>Nenhum item encontrado</strong><span>Tente buscar outro nome ou escolha uma categoria diferente.</span></div> : <div className="menu-grid">{showBuilder && <article className="menu-card build-card"><div className="menu-photo build-photo"><Plus size={34} /><span>Monte do seu jeito</span></div><div><small>BATIDINHAS</small><h3>Monte sua batidinha</h3><p>Escolha quantidade, sabores, preparo e adicionais.</p><footer><strong>A partir de {money.format(Math.min(...sizes.map((item) => item.basePrice)))}</strong><button disabled={!storeOpen} onClick={() => setBuilderOpen(true)}>Montar</button></footer></div></article>}{filteredProducts.map((product) => <article className="menu-card" key={product.id}><div className="menu-photo">{product.imageUrl ? <img src={product.imageUrl} alt={product.name} /> : <CupSoda size={38} />}</div><div><small>{categories.find((item) => item.id === product.categoryId)?.name}</small><h3>{product.name}</h3><p>{product.description}</p><footer><strong>{money.format(product.price)}</strong><button disabled={!storeOpen} aria-label={`Adicionar ${product.name} ao carrinho`} onClick={() => addProduct(product)}><Plus size={18} /><span>Adicionar</span></button></footer></div></article>)}</div>}</main>
+    <main className="menu-content"><div className="menu-title"><div><small>NOSSO CARDÁPIO</small><h2>Escolha o seu pedido</h2></div><span>{filteredProducts.length + (showBuilder ? 1 : 0)} opções disponíveis</span></div>{!filteredProducts.length && !showBuilder ? <div className="menu-empty"><Search size={34} /><strong>Nenhum item encontrado</strong><span>Tente buscar outro nome ou escolha uma categoria diferente.</span></div> : <div className="menu-grid">{showBuilder && <article className="menu-card build-card"><div className="menu-photo build-photo"><Plus size={34} /><span>Monte do seu jeito</span></div><div><small>BATIDINHAS</small><h3>Monte sua batidinha</h3><p>Escolha quantidade, sabores, preparo e adicionais.</p><footer><strong>A partir de {money.format(Math.min(...sizes.map((item) => item.basePrice)))}</strong><button disabled={!storeOpen} onClick={() => setBuilderOpen(true)}>Montar</button></footer></div></article>}{filteredProducts.map((product) => <article className="menu-card" key={product.id}><div className="menu-photo">{product.imageUrl ? <img src={product.imageUrl} alt={product.name} loading="lazy" decoding="async" /> : <CupSoda size={38} />}</div><div><small>{categories.find((item) => item.id === product.categoryId)?.name}</small><h3>{product.name}</h3><p>{product.description}</p><footer><strong>{money.format(product.price)}</strong><button disabled={!storeOpen} aria-label={`Adicionar ${product.name} ao carrinho`} onClick={() => addProduct(product)}><Plus size={18} /><span>Adicionar</span></button></footer></div></article>)}</div>}</main>
     <footer className="public-footer"><div><span><CupSoda size={21} /></span><div><strong>Batidinha do Rick</strong><small>Cardápio online • Ipatinga, MG</small></div></div><button onClick={onBack}><LockKeyhole size={14} /> Área administrativa</button></footer>
     {cartCount > 0 && !cartOpen && !checkoutOpen && !completedOrder && <button className="floating-cart" onClick={() => setCartOpen(true)}><span><ShoppingBag size={19} /><b>{cartCount} {cartCount === 1 ? "item" : "itens"}</b></span><strong>{money.format(cartTotal)}</strong></button>}
 
