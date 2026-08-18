@@ -127,6 +127,7 @@ main { min-width: 0; }.topbar { height: 84px; background: #fffdfa; border-bottom
 .public-hero { min-height: 310px; }
 .build-photo { gap: 9px; color: white; background: linear-gradient(135deg, #7a1fa8, #d6259b); }
 .build-photo span { border-radius: 99px; padding: 7px 11px; background: #21062f99; font-size: 11px; font-weight: 800; }
+.delivery-estimate { color: #7a1fa8; font-size: 11px; font-weight: 700; }
 @media (max-width: 650px) {
   .public-hero { min-height: 330px; }
   .category-pills { top: 78px; }
