@@ -40,7 +40,7 @@ export const initialProducts: Product[] = [
     name: "Combo Dupla do Rick",
     description: "Duas batidinhas de 300 ml. Escolha entre os sabores disponíveis.",
     price: 28,
-    imageUrl: "images/batidinha-morango.webp",
+    imageUrl: "",
     active: true,
   },
 ];
