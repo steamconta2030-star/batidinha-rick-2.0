@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Batidinha do Rick — Ipatinga</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --violet-deep:#180733;
+    --violet-mid:#3B0E63;
+    --purple:#7A1FA8;
+    --magenta:#D6259B;
+    --gold:#F4B942;
+    --cyan:#3CE9FF;
+    --ink:#FBEFFF;
+    --ink-dim:#C9AEDE;
+    --radius-lg:28px;
+    --radius-md:18px;
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--violet-deep);
+    color:var(--ink);
+    font-family:'Manrope',sans-serif;
+    overflow-x:hidden;
+  }
+  img,svg{display:block;max-width:100%;}
+  a{color:inherit;text-decoration:none;}
+  button{font-family:inherit;}
+
+  ::selection{background:var(--magenta);color:var(--ink);}
+
+  :focus-visible{
+    outline:3px solid var(--cyan);
+    outline-offset:3px;
+    border-radius:8px;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.001s !important; animation-iteration-count:1 !important; transition:none !important;}
+  }
+
+  .bg-glow{
+    position:fixed;
+    inset:0;
+    z-index:-2;
+    background:
+      radial-gradient(60% 45% at 18% 8%, rgba(214,37,155,0.35), transparent 60%),
+      radial-gradient(55% 40% at 85% 12%, rgba(60,233,255,0.18), transparent 60%),
+      radial-gradient(70% 55% at 50% 95%, rgba(122,31,168,0.45), transparent 60%),
+      var(--violet-deep);
+  }
+
+  .noise{
+    position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.05;mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  .wrap{
+    max-width:520px;
+    margin:0 auto;
+    position:relative;
+    padding:0 20px;
+  }
+
+  /* ---------- NAV ---------- */
+  .topbar{
+    position:sticky;
+    top:0;
+    z-index:50;
+    backdrop-filter:blur(10px);
+    background:rgba(24,7,51,0.72);
+    border-bottom:1px solid rgba(255,255,255,0.08);
+  }
+  .topbar-inner{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:12px 20px;
+    max-width:520px;
+    margin:0 auto;
+  }
+  .brand-badge{
+    display:flex;align-items:center;gap:10px;
+    font-family:'Anton',sans-serif;
+    letter-spacing:.5px;
+    font-size:15px;
+  }
+  .crown-mini{width:20px;height:20px;flex:none;}
+  .nav-cta{
+    display:flex;align-items:center;gap:6px;
+    background:linear-gradient(135deg,#25D366,#1EBE5A);
+    color:#08240F;
+    font-weight:800;
+    font-size:13px;
+    padding:9px 14px;
+    border-radius:999px;
+    box-shadow:0 4px 14px rgba(37,211,102,0.35);
+  }
+
+  /* ---------- HERO ---------- */
+  .hero{
+    position:relative;
+    padding:38px 0 30px;
+    text-align:center;
+    isolation:isolate;
+  }
+  .eyebrow-pill{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    background:rgba(255,255,255,0.08);
+    border:1px solid rgba(255,255,255,0.18);
+    padding:7px 16px;
+    border-radius:999px;
+    font-size:12.5px;
+    font-weight:700;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    color:var(--ink);
+  }
+  .dot-live{
+    width:7px;height:7px;border-radius:50%;
+    background:var(--cyan);
+    box-shadow:0 0 8px var(--cyan);
+    animation:pulse 1.8s ease-in-out infinite;
+  }
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+
+  .hero-title{
+    font-family:'Anton',sans-serif;
+    font-weight:400;
+    line-height:0.95;
+    margin:20px 0 4px;
+    text-transform:uppercase;
+  }
+  .hero-title .line1{
+    display:block;
+    font-size:clamp(30px,9.2vw,44px);
+    color:var(--ink);
+    letter-spacing:.02em;
+    text-shadow:0 0 22px rgba(60,233,255,0.35);
+  }
+  .hero-title .line2{
+    display:block;
+    font-size:clamp(56px,19vw,96px);
+    background:linear-gradient(180deg,#F7D8FF 0%, var(--magenta) 45%, var(--purple) 100%);
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+    filter:drop-shadow(0 0 26px rgba(214,37,155,0.55));
+    transform:skewY(-2deg);
+    margin-top:-4px;
+  }
+
+  .drip{
+    width:min(340px,86%);
+    margin:6px auto 18px;
+    height:10px;
+  }
+  .drip path{
+    stroke:var(--gold);
+    stroke-width:3;
+    fill:none;
+    stroke-linecap:round;
+    stroke-dasharray:340;
+    stroke-dashoffset:340;
+    animation:draw 1.6s ease-out forwards .3s;
+    filter:drop-shadow(0 0 6px rgba(244,185,66,0.7));
+  }
+  @keyframes draw{to{stroke-dashoffset:0;}}
+
+  .tagline{
+    font-size:15.5px;
+    font-weight:800;
+    color:var(--gold);
+    letter-spacing:.02em;
+    margin:0 0 6px;
+  }
+  .subhead{
+    font-size:14px;
+    color:var(--ink-dim);
+    margin:0 0 22px;
+    line-height:1.5;
+  }
+
+  .price-row{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    margin-bottom:22px;
+    flex-wrap:wrap;
+  }
+  .price-badge{
+    background:rgba(255,255,255,0.06);
+    border:1px solid rgba(255,255,255,0.14);
+    border-radius:999px;
+    padding:8px 16px;
+    font-size:13px;
+    font-weight:700;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .price-badge b{
+    color:var(--gold);
+    font-size:16px;
+  }
+
+  .cta-primary{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    width:100%;
+    max-width:340px;
+    padding:17px 22px;
+    border-radius:999px;
+    background:linear-gradient(135deg,#2CE374,#12A550);
+    color:#052411;
+    font-weight:800;
+    font-size:16.5px;
+    box-shadow:0 10px 30px rgba(44,227,116,0.35), inset 0 1px 0 rgba(255,255,255,0.4);
+    transition:transform .15s ease, box-shadow .15s ease;
+    letter-spacing:.01em;
+  }
+  .cta-primary:hover{transform:translateY(-2px) scale(1.01);box-shadow:0 14px 34px rgba(44,227,116,0.45);}
+  .cta-primary svg{width:22px;height:22px;flex:none;}
+
+  .cta-note{
+    font-size:12px;
+    color:var(--ink-dim);
+    margin-top:10px;
+  }
+
+  /* ---------- BOTTLE ORBIT ---------- */
+  .bottle-stage{
+    position:relative;
+    height:150px;
+    margin:6px auto 8px;
+    max-width:400px;
+  }
+  .bottle-orb{
+    position:absolute;
+    top:8px;
+    width:96px;height:96px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:'Anton',sans-serif;
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:.03em;
+    color:#fff;
+    border:3px solid rgba(255,255,255,0.85);
+    box-shadow:0 0 0 3px rgba(255,255,255,0.06), 0 10px 24px rgba(0,0,0,0.35);
+  }
+  .bottle-orb.morango{left:6%; background:radial-gradient(circle at 35% 30%,#FF6E9A,#B4123F 75%); animation:float 4.2s ease-in-out infinite;}
+  .bottle-orb.maracuja{left:50%; transform:translateX(-50%); top:0; background:radial-gradient(circle at 35% 30%,#FFD76E,#E08A0E 75%); animation:float 4.6s ease-in-out infinite .3s;}
+  .bottle-orb.acai{right:6%; background:radial-gradient(circle at 35% 30%,#B98CFF,#3B0E63 75%); animation:float 4s ease-in-out infinite .6s;}
+  @keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-9px);}}
+  .bottle-orb.maracuja{animation-name:floatCenter;}
+  @keyframes floatCenter{0%,100%{transform:translateX(-50%) translateY(0);}50%{transform:translateX(-50%) translateY(-9px);}}
+
+  .crown-tiny{position:absolute;top:-11px;left:50%;transform:translateX(-50%);width:22px;height:22px;}
+
+  /* ---------- SECTION HEADERS ---------- */
+  .section{padding:44px 0;}
+  .section-head{text-align:center;margin-bottom:26px;}
+  .section-eyebrow{
+    font-size:12px;
+    font-weight:800;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:var(--cyan);
+    margin:0 0 8px;
+  }
+  .section-title{
+    font-family:'Anton',sans-serif;
+    font-size:clamp(26px,7vw,32px);
+    text-transform:uppercase;
+    margin:0;
+    letter-spacing:.01em;
+    background:linear-gradient(90deg,#fff,#E7C6FF);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+
+  /* ---------- FLAVOR CARDS ---------- */
+  .flavor-list{display:flex;flex-direction:column;gap:14px;}
+  .flavor-card{
+    position:relative;
+    display:flex;
+    align-items:center;
+    gap:16px;
+    padding:18px;
+    border-radius:var(--radius-md);
+    background:linear-gradient(160deg, rgba(255,255,255,0.07), rgba(255,255,255,0.02));
+    border:1px solid rgba(255,255,255,0.1);
+    overflow:hidden;
+  }
+  .flavor-card::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:var(--flavor-glow);
+    opacity:.25;
+    filter:blur(30px);
+    z-index:0;
+  }
+  .flavor-card.morango{--flavor-glow:radial-gradient(circle at 0% 0%, #FF3E7A, transparent 60%);}
+  .flavor-card.maracuja{--flavor-glow:radial-gradient(circle at 0% 0%, #FFCB3E, transparent 60%);}
+  .flavor-card.acai{--flavor-glow:radial-gradient(circle at 0% 0%, #A24BFF, transparent 60%);}
+
+  .flavor-jar{
+    position:relative;
+    z-index:1;
+    flex:none;
+    width:58px;height:58px;
+    border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    border:2px solid rgba(255,255,255,0.7);
+    font-size:9px;font-weight:800;text-transform:uppercase;color:#fff;
+    font-family:'Anton',sans-serif;
+    text-align:center;
+    box-shadow:0 6px 16px rgba(0,0,0,0.3);
+  }
+  .flavor-jar.morango{background:radial-gradient(circle at 35% 30%,#FF6E9A,#B4123F 75%);}
+  .flavor-jar.maracuja{background:radial-gradient(circle at 35% 30%,#FFD76E,#E08A0E 75%);}
+  .flavor-jar.acai{background:radial-gradient(circle at 35% 30%,#B98CFF,#3B0E63 75%);}
+
+  .flavor-body{position:relative;z-index:1;flex:1;}
+  .flavor-name{
+    font-family:'Anton',sans-serif;
+    font-size:18px;
+    text-transform:uppercase;
+    margin:0 0 3px;
+    letter-spacing:.02em;
+  }
+  .flavor-tag{
+    font-size:13px;
+    color:var(--ink-dim);
+    margin:0;
+    line-height:1.4;
+  }
+  .flavor-soon{
+    position:relative;z-index:1;
+    flex:none;
+    font-size:10.5px;
+    font-weight:800;
+    text-transform:uppercase;
+    letter-spacing:.04em;
+    color:var(--violet-deep);
+    background:var(--gold);
+    padding:5px 10px;
+    border-radius:999px;
+    white-space:nowrap;
+  }
+
+  /* ---------- STEPS ---------- */
+  .steps{display:flex;flex-direction:column;gap:16px;}
+  .step{
+    display:flex;
+    gap:14px;
+    align-items:flex-start;
+    padding:16px 18px;
+    border-radius:var(--radius-md);
+    background:rgba(255,255,255,0.04);
+    border:1px solid rgba(255,255,255,0.08);
+  }
+  .step-num{
+    flex:none;
+    width:36px;height:36px;
+    border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Anton',sans-serif;
+    font-size:15px;
+    background:linear-gradient(135deg,var(--magenta),var(--purple));
+    box-shadow:0 0 14px rgba(214,37,155,0.5);
+  }
+  .step-title{font-weight:800;font-size:14.5px;margin:0 0 3px;}
+  .step-desc{font-size:13px;color:var(--ink-dim);margin:0;line-height:1.5;}
+
+  /* ---------- FINAL CTA ---------- */
+  .final{
+    text-align:center;
+    padding:40px 0 56px;
+  }
+  .final-card{
+    padding:30px 22px;
+    border-radius:var(--radius-lg);
+    background:
+      radial-gradient(120% 100% at 50% 0%, rgba(214,37,155,0.35), transparent 60%),
+      linear-gradient(160deg, var(--violet-mid), var(--violet-deep));
+    border:1px solid rgba(255,255,255,0.12);
+    box-shadow:0 20px 50px rgba(0,0,0,0.4);
+  }
+  .final-title{
+    font-family:'Anton',sans-serif;
+    font-size:clamp(24px,7vw,30px);
+    text-transform:uppercase;
+    margin:0 0 8px;
+  }
+  .final-sub{font-size:13.5px;color:var(--ink-dim);margin:0 0 22px;}
+  .phone-line{
+    font-family:'Anton',sans-serif;
+    font-size:clamp(26px,8vw,34px);
+    letter-spacing:.03em;
+    color:var(--gold);
+    margin:14px 0 22px;
+    text-shadow:0 0 20px rgba(244,185,66,0.4);
+  }
+
+  .footer{
+    text-align:center;
+    padding:0 0 40px;
+    font-size:12.5px;
+    color:var(--ink-dim);
+  }
+  .footer a{color:var(--cyan);font-weight:700;}
+  .footer-crown{width:26px;height:26px;margin:0 auto 10px;}
+
+  @media (min-width:480px){
+    .bottle-orb{width:104px;height:104px;font-size:11px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-glow"></div>
+<div class="noise"></div>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand-badge">
+      <svg class="crown-mini" viewBox="0 0 24 24" fill="none"><path d="M3 8l4 4 5-7 5 7 4-4-2 10H5L3 8z" fill="#F4B942"/></svg>
+      do Rick
+    </div>
+    <a class="nav-cta" href="https://wa.me/553198501514" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="#08240F"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-2.8.7.7-2.7-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.6-6.1c-.3-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1-.2.2-.6.8-.8 1-.1.2-.3.2-.5.1-1.4-.6-2.3-1.4-3.1-2.7-.1-.2-.1-.4.1-.5.2-.2.5-.5.6-.7.1-.2.1-.4 0-.6-.1-.2-.5-1.3-.7-1.7-.2-.4-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.2.2-.9.9-.9 2.2s.9 2.5 1 2.7c.1.2 1.8 2.8 4.4 3.8 2.1.8 2.5.6 3 .6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.1-1.2-.1-.1-.2-.2-.4-.2z"/></svg>
+      Pedir no zap
+    </a>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- HERO -->
+  <section class="hero">
+    <span class="eyebrow-pill"><span class="dot-live"></span>Ipatinga já pode pedir</span>
+
+    <h1 class="hero-title">
+      <span class="line1">Batidinha</span>
+      <span class="line2">do Rick</span>
+    </h1>
+
+    <svg class="drip" viewBox="0 0 340 10" preserveAspectRatio="none" aria-hidden="true">
+      <path d="M4 5 Q 90 -3, 170 5 T 336 5"/>
+    </svg>
+
+    <p class="tagline">Sabor que vicia, energia que fica.</p>
+    <p class="subhead">Vitaminas geladas, feitas na hora, entregues na sua porta em Ipatinga.</p>
+
+    <div class="bottle-stage" role="img" aria-label="Sabores morango, maracujá e açaí">
+      <div class="bottle-orb morango">morango</div>
+      <div class="bottle-orb maracuja">
+        <svg class="crown-tiny" viewBox="0 0 24 24" fill="none"><path d="M3 8l4 4 5-7 5 7 4-4-2 10H5L3 8z" fill="#F4B942"/></svg>
+        maracujá
+      </div>
+      <div class="bottle-orb acai">em breve<br>açaí</div>
+    </div>
+
+    <div class="price-row">
+      <span class="price-badge">🧊 vidro de <b>300ml</b></span>
+      <span class="price-badge">💜 só <b>R$ 15</b></span>
+    </div>
+
+    <a class="cta-primary" href="https://wa.me/553198501514?text=Quero%20pedir%20uma%20Batidinha%20do%20Rick!" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" fill="#052411"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-2.8.7.7-2.7-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.6-6.1c-.3-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1-.2.2-.6.8-.8 1-.1.2-.3.2-.5.1-1.4-.6-2.3-1.4-3.1-2.7-.1-.2-.1-.4.1-.5.2-.2.5-.5.6-.7.1-.2.1-.4 0-.6-.1-.2-.5-1.3-.7-1.7-.2-.4-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.2.2-.9.9-.9 2.2s.9 2.5 1 2.7c.1.2 1.8 2.8 4.4 3.8 2.1.8 2.5.6 3 .6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.1-1.2-.1-.1-.2-.2-.4-.2z"/></svg>
+      Pedir agora no WhatsApp
+    </a>
+    <p class="cta-note">Resposta rápida • entrega no mesmo dia</p>
+  </section>
+
+  <!-- FLAVORS -->
+  <section class="section" id="sabores">
+    <div class="section-head">
+      <p class="section-eyebrow">Escolha o seu</p>
+      <h2 class="section-title">Sabores</h2>
+    </div>
+    <div class="flavor-list">
+      <div class="flavor-card morango">
+        <div class="flavor-jar morango">morango</div>
+        <div class="flavor-body">
+          <h3 class="flavor-name">Morango</h3>
+          <p class="flavor-tag">O docinho que vira paixão.</p>
+        </div>
+      </div>
+      <div class="flavor-card maracuja">
+        <div class="flavor-jar maracuja">maracujá</div>
+        <div class="flavor-body">
+          <h3 class="flavor-name">Maracujá</h3>
+          <p class="flavor-tag">O azedinho que vira apaixonante.</p>
+        </div>
+      </div>
+      <div class="flavor-card acai">
+        <div class="flavor-jar acai">açaí</div>
+        <div class="flavor-body">
+          <h3 class="flavor-name">Açaí</h3>
+          <p class="flavor-tag">Chegando pra fechar o trio.</p>
+        </div>
+        <span class="flavor-soon">Em breve</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW TO ORDER -->
+  <section class="section" id="como-pedir">
+    <div class="section-head">
+      <p class="section-eyebrow">É rapidinho</p>
+      <h2 class="section-title">Como pedir</h2>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <span class="step-num">1</span>
+        <div>
+          <p class="step-title">Chama no zap</p>
+          <p class="step-desc">Toca no botão verde e manda uma mensagem pra gente.</p>
+        </div>
+      </div>
+      <div class="step">
+        <span class="step-num">2</span>
+        <div>
+          <p class="step-title">Escolhe o sabor</p>
+          <p class="step-desc">Morango ou maracujá — o vidro de 300ml sai por R$ 15.</p>
+        </div>
+      </div>
+      <div class="step">
+        <span class="step-num">3</span>
+        <div>
+          <p class="step-title">Recebe em casa</p>
+          <p class="step-desc">A gente entrega geladinho, direto na sua porta em Ipatinga.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FINAL CTA -->
+  <section class="final">
+    <div class="final-card">
+      <h2 class="final-title">Peça já o seu</h2>
+      <p class="final-sub">Vem conhecer a Batidinha do Rick antes que acabe o lote de hoje.</p>
+      <div class="phone-line">31 98501-1514</div>
+      <a class="cta-primary" href="https://wa.me/553198501514?text=Quero%20pedir%20uma%20Batidinha%20do%20Rick!" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="#052411"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-2.8.7.7-2.7-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.6-6.1c-.3-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1-.2.2-.6.8-.8 1-.1.2-.3.2-.5.1-1.4-.6-2.3-1.4-3.1-2.7-.1-.2-.1-.4.1-.5.2-.2.5-.5.6-.7.1-.2.1-.4 0-.6-.1-.2-.5-1.3-.7-1.7-.2-.4-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.2.2-.9.9-.9 2.2s.9 2.5 1 2.7c.1.2 1.8 2.8 4.4 3.8 2.1.8 2.5.6 3 .6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.1-1.2-.1-.1-.2-.2-.4-.2z"/></svg>
+        Pedir agora no WhatsApp
+      </a>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <svg class="footer-crown" viewBox="0 0 24 24" fill="none"><path d="M3 8l4 4 5-7 5 7 4-4-2 10H5L3 8z" fill="#F4B942"/></svg>
+    <p>@batidinhadorick · Ipatinga, MG</p>
+    <p><a href="https://wa.me/553198501514" target="_blank" rel="noopener">wa.me/553198501514</a></p>
+  </footer>
+
+</main>
+
+</body>
+</html>
