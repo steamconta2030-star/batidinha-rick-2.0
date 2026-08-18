@@ -11,7 +11,7 @@ export const initialProducts: Product[] = [
     id: "batidinha-morango",
     categoryId: "batidinhas",
     name: "Batidinha de Morango",
-    description: "Cremosa, gelada e preparada na hora. Garrafa de vidro de 300 ml.",
+    description: "Cremosa, gelada e preparada na hora. Garrafa de 300 ml.",
     price: 15,
     imageUrl: "images/batidinha-morango.webp",
     active: true,
