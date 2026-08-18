@@ -33,13 +33,17 @@ const fallback: MenuData = {
   online: false,
 };
 
+function normalizePackaging(product: Product): Product {
+  return { ...product, description: product.description.replace(/garrafa de vidro de/gi, "Garrafa de") };
+}
+
 function mergeLocalProducts(saved: Product[] | null): Product[] {
   if (!saved?.length) return initialProducts;
   const defaults = new Map(initialProducts.map((product) => [product.id, product]));
   const merged = saved.map((product) => {
     const currentDefault = defaults.get(product.id);
-    if (product.id === "combo-dupla") return { ...product, imageUrl: "" };
-    return currentDefault && !product.imageUrl ? { ...product, imageUrl: currentDefault.imageUrl } : product;
+    if (product.id === "combo-dupla") return normalizePackaging({ ...product, imageUrl: "" });
+    return normalizePackaging(currentDefault && !product.imageUrl ? { ...product, imageUrl: currentDefault.imageUrl } : product);
   });
   const savedIds = new Set(merged.map((product) => product.id));
   return [...merged, ...initialProducts.filter((product) => !savedIds.has(product.id))];
@@ -89,7 +93,7 @@ export function useOnlineMenu() {
       if (failed?.error) throw failed.error;
 
       const categories: Category[] = (categoriesResult.data ?? []).map((row) => ({ id: row.id, name: row.name, active: row.active }));
-      const products: Product[] = (productsResult.data ?? []).map((row) => ({
+      const products: Product[] = (productsResult.data ?? []).map((row) => normalizePackaging({
         id: row.id,
         categoryId: row.category_id,
         name: row.name,
