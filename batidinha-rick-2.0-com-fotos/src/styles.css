@@ -217,7 +217,8 @@ main { min-width: 0; }.topbar { height: 84px; background: #fffdfa; border-bottom
 .public-footer small { margin-top: 3px; color: #bca6c5; font-size: 10px; }
 .public-footer button { padding: 8px 10px; display: flex; align-items: center; gap: 6px; border: 1px solid #ffffff18; border-radius: 9px; color: #bda8c6; background: #ffffff09; font-size: 10px; }
 .offline-banner { padding: 11px max(24px, calc((100vw - 1180px) / 2)); display: flex; justify-content: center; gap: 8px; color: #6b4a10; background: #fff8df; border-bottom: 1px solid #efd487; font-size: 12px; }
-.saved-data-note { margin: -2px 0 0; padding: 9px 11px; border-radius: 9px; color: #73517e; background: #f4ebf7; font-size: 10px; line-height: 1.4; }
+.saved-data-note { margin: -2px 0 0; padding: 9px 11px; display: flex; align-items: center; justify-content: space-between; gap: 10px; border-radius: 9px; color: #73517e; background: #f4ebf7; font-size: 10px; line-height: 1.4; }
+.saved-data-note button { flex: 0 0 auto; padding: 5px 7px; border: 0; border-radius: 7px; color: #8c256f; background: #fff; font-size: 9px; font-weight: 800; }
 .public-menu button:focus-visible, .public-menu input:focus-visible, .public-menu select:focus-visible, .public-menu textarea:focus-visible { outline: 3px solid #f4b942; outline-offset: 3px; }
 .floating-cart { display: none; }
 @media (max-width: 650px) {
