@@ -10,8 +10,8 @@ insert into public.categories (id, store_id, name, position, active) values
 on conflict (id) do update set name = excluded.name, position = excluded.position, active = excluded.active;
 
 insert into public.products (id, store_id, category_id, name, description, price, image_path, position, active) values
-  ('30000000-0000-4000-8000-000000000001', '10000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000001', 'Batidinha de Morango', 'Cremosa, gelada e preparada na hora. Garrafa de vidro de 300 ml.', 15, 'images/batidinha-morango.webp', 1, true),
-  ('30000000-0000-4000-8000-000000000002', '10000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000001', 'Batidinha de Maracujá', 'Cremosa com o azedinho do maracujá. Garrafa de vidro de 300 ml.', 15, 'images/batidinha-maracuja.webp', 2, true),
+  ('30000000-0000-4000-8000-000000000001', '10000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000001', 'Batidinha de Morango', 'Cremosa, gelada e preparada na hora. Garrafa de 300 ml.', 15, 'images/batidinha-morango.webp', 1, true),
+  ('30000000-0000-4000-8000-000000000002', '10000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000001', 'Batidinha de Maracujá', 'Cremosa com o azedinho do maracujá. Garrafa de 300 ml.', 15, 'images/batidinha-maracuja.webp', 2, true),
   ('30000000-0000-4000-8000-000000000004', '10000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000001', 'Batidinha de Paçoca', 'Cremosa, refrescante e preparada com paçoca selecionada. Garrafa de 300 ml.', 15, 'images/batidinha-pacoca.webp', 3, true),
   ('30000000-0000-4000-8000-000000000003', '10000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000002', 'Combo Dupla do Rick', 'Duas batidinhas de 300 ml com sabores à escolha.', 28, 'images/batidinha-morango.webp', 4, true)
 on conflict (id) do update set category_id = excluded.category_id, name = excluded.name, description = excluded.description,
