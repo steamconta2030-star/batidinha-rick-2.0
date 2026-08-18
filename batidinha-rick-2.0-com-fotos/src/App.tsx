@@ -37,6 +37,7 @@ export default function App() {
       const defaults = new Map(initialProducts.map((product) => [product.id, product]));
       const merged = current.map((product) => {
         const currentDefault = defaults.get(product.id);
+        if (product.id === "combo-dupla") return { ...product, imageUrl: "" };
         return currentDefault && !product.imageUrl ? { ...product, imageUrl: currentDefault.imageUrl } : product;
       });
       const currentIds = new Set(merged.map((product) => product.id));
