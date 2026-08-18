@@ -128,6 +128,9 @@ main { min-width: 0; }.topbar { height: 84px; background: #fffdfa; border-bottom
 .build-photo { gap: 9px; color: white; background: linear-gradient(135deg, #7a1fa8, #d6259b); }
 .build-photo span { border-radius: 99px; padding: 7px 11px; background: #21062f99; font-size: 11px; font-weight: 800; }
 .delivery-estimate { color: #7a1fa8; font-size: 11px; font-weight: 700; }
+.cart-header-actions { display: flex; align-items: center; gap: 8px; }
+.cart-drawer header .clear-cart { border-radius: 9px; padding: 7px 9px; color: #a12676; background: #f8e7f3; font-size: 11px; font-weight: 800; }
+.cart-items article > div:first-child > small { display: block; margin-top: 3px; color: #8c7e75; font-size: 10px; }
 @media (max-width: 650px) {
   .public-hero { min-height: 330px; }
   .category-pills { top: 78px; }
