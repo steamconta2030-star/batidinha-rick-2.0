@@ -146,3 +146,66 @@ main { min-width: 0; }.topbar { height: 84px; background: #fffdfa; border-bottom
   .public-hero { min-height: 330px; }
   .category-pills { top: 78px; }
 }
+
+/* Onda visual premium do cardápio público. */
+.public-menu { background:
+  radial-gradient(circle at 8% 32%, #d6259b10 0 180px, transparent 181px),
+  radial-gradient(circle at 92% 70%, #f4b94214 0 220px, transparent 221px),
+  #f8f3fa; color: #281331; }
+.public-header { height: 82px; padding-inline: max(20px, calc((100vw - 1200px) / 2)); background: #220934ee; border-bottom: 1px solid #ffffff18; box-shadow: 0 10px 30px #21052f25; backdrop-filter: blur(14px); }
+.public-brand > span { width: 44px; height: 44px; color: #371044; background: linear-gradient(145deg, #ffd76a, #f4a62a); box-shadow: 0 8px 24px #f4b94235; }
+.public-brand strong { font: 900 20px/1.1 system-ui, sans-serif; letter-spacing: -.03em; }
+.public-brand small { color: #d6bedf; margin-top: 4px; }
+.back-admin { color: #d8c5e1; border-color: #ffffff22; background: #ffffff0b; }
+.cart-button { min-height: 45px; padding: 10px 15px; border: 1px solid #ffffff20; background: linear-gradient(135deg, #d6259b, #8b26ba); box-shadow: 0 10px 28px #d6259b35; transition: transform .2s ease, box-shadow .2s ease; }
+.cart-button:hover { transform: translateY(-2px); box-shadow: 0 14px 34px #d6259b48; }
+.public-hero { min-height: 390px; position: relative; isolation: isolate; background:
+  radial-gradient(circle at 78% 18%, #f4b94235 0 90px, transparent 92px),
+  radial-gradient(circle at 86% 78%, #d6259b60 0 170px, transparent 172px),
+  linear-gradient(125deg, #21062f 0%, #57127b 54%, #8e22b0 100%); }
+.public-hero::before { content: ""; position: absolute; inset: 0; z-index: -1; opacity: .16; background-image: radial-gradient(#fff 1px, transparent 1px); background-size: 22px 22px; mask-image: linear-gradient(90deg, #000, transparent); }
+.public-hero > div { max-width: 690px; }
+.public-hero small { display: inline-flex; padding: 7px 11px; border: 1px solid #f4b94255; border-radius: 99px; color: #ffd96e; background: #2a0738aa; }
+.public-hero h1 { margin: 18px 0 14px; color: #fff; font: 900 clamp(45px, 6vw, 76px)/.96 system-ui, sans-serif; letter-spacing: -.065em; text-wrap: balance; }
+.public-hero p { color: #e3cee9; font-size: 17px; }
+.public-hero button { padding: 15px 20px; border: 1px solid #ffffff2b; border-radius: 14px; background: linear-gradient(135deg, #e72caa, #9c2bc5); box-shadow: 0 12px 30px #15021f55; transition: transform .2s ease, box-shadow .2s ease; }
+.public-hero button:not(:disabled):hover { transform: translateY(-2px); box-shadow: 0 16px 38px #15021f70; }
+.category-pills { top: 82px; padding-block: 16px; border-color: #e4d8e9; background: #fbf8fddd; backdrop-filter: blur(12px); }
+.category-pills button { padding: 10px 17px; border-color: #dfd0e5; color: #674273; font-weight: 750; transition: .2s ease; }
+.category-pills button:hover { color: #7a1fa8; border-color: #b989ca; }
+.category-pills button.active { border-color: transparent; background: linear-gradient(135deg, #7a1fa8, #d6259b); box-shadow: 0 7px 18px #9f279c25; }
+.menu-search { padding-top: 26px; background: transparent; }
+.menu-search label { max-width: 620px; border-color: #e0d3e5; border-radius: 15px; box-shadow: 0 10px 30px #4312540d; transition: border-color .2s ease, box-shadow .2s ease; }
+.menu-search label:focus-within { border-color: #aa58c6; box-shadow: 0 0 0 4px #a83bc015, 0 12px 34px #43125412; }
+.menu-search input { padding-block: 14px; }
+.menu-content { max-width: 1200px; padding-top: 34px; }
+.menu-title h2 { color: #32143d; font: 900 36px/1.1 system-ui, sans-serif; letter-spacing: -.04em; }
+.menu-title small { color: #a127a4; }
+.menu-grid { gap: 22px; }
+.menu-card { border-color: #e6d9eb; border-radius: 22px; box-shadow: 0 12px 35px #3d124a0d; transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease; }
+.menu-card:hover { transform: translateY(-5px); border-color: #d0addc; box-shadow: 0 22px 50px #3d124a1a; }
+.menu-card > div:last-child { padding: 20px; }
+.menu-card h3 { color: #361541; font: 850 22px/1.15 system-ui, sans-serif; letter-spacing: -.025em; }
+.menu-card p { color: #78647f; line-height: 1.5; }
+.menu-card footer { border-color: #eee4f1; }
+.menu-card footer strong { color: #6f208f; font-size: 18px; }
+.menu-card footer button { border-radius: 12px; background: linear-gradient(135deg, #7a1fa8, #d6259b); box-shadow: 0 8px 18px #8f279f2b; transition: transform .2s ease; }
+.menu-card footer button:not(:disabled):hover { transform: scale(1.06); }
+.menu-photo { height: 180px; color: #fff; background: linear-gradient(145deg, #32103f, #7a1fa8); }
+.menu-photo:has(img) { height: 300px; background: linear-gradient(145deg, #100914, #241329); }
+.menu-photo img { transition: transform .35s ease; }
+.menu-card:hover .menu-photo img { transform: scale(1.025); }
+.build-photo { min-height: 180px; position: relative; background: linear-gradient(145deg, #46105d, #9f25b3 58%, #d6259b); }
+.build-photo::after { content: "+"; position: absolute; right: 14px; top: -32px; color: #ffffff12; font-size: 150px; font-weight: 900; }
+.build-photo > svg, .build-photo > span { position: relative; z-index: 1; }
+.cart-drawer, .checkout-card, .pizza-builder { box-shadow: 0 30px 90px #18051f45; }
+@media (max-width: 650px) {
+  .public-header { height: 74px; }
+  .category-pills { top: 74px; }
+  .public-hero { min-height: 350px; padding: 44px 22px; }
+  .public-hero h1 { font-size: 45px; }
+  .public-hero p { font-size: 15px; }
+  .menu-title h2 { font-size: 30px; }
+  .menu-card { border-radius: 19px; }
+  .menu-photo:has(img) { height: min(72vw, 360px); }
+}
