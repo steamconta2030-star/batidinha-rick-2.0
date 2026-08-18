@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
-import { Check, CheckCircle2, CupSoda, LockKeyhole, MapPin, MessageCircle, Minus, Plus, Search, ShoppingBag, Sparkles, Trash2, X } from "lucide-react";
+import { Check, CheckCircle2, CupSoda, LockKeyhole, MapPin, MessageCircle, Minus, Plus, Search, Share2, ShoppingBag, Sparkles, Trash2, X } from "lucide-react";
 import { initialZones } from "../data/delivery";
 import { usePersistentState } from "../hooks/usePersistentState";
 import { useOnlineMenu } from "../hooks/useOnlineMenu";
@@ -17,6 +17,7 @@ export default function PublicMenu({ onBack }: { onBack: () => void }) {
   const [activeCategory, setActiveCategory] = useState("all");
   const [query, setQuery] = useState("");
   const [browserOnline, setBrowserOnline] = useState(() => navigator.onLine);
+  const [shareFeedback, setShareFeedback] = useState("Compartilhar");
   const [builderOpen, setBuilderOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
@@ -129,11 +130,26 @@ export default function PublicMenu({ onBack }: { onBack: () => void }) {
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
   }
 
+  async function shareMenu() {
+    const shareData = { title: "Batidinha do Rick", text: "Confira o cardápio online da Batidinha do Rick!", url: window.location.href };
+    if (navigator.share) {
+      try { await navigator.share(shareData); return; }
+      catch (error) { if (error instanceof DOMException && error.name === "AbortError") return; }
+    }
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setShareFeedback("Link copiado!");
+      window.setTimeout(() => setShareFeedback("Compartilhar"), 2200);
+    } catch {
+      window.prompt("Copie o link do cardápio:", window.location.href);
+    }
+  }
+
   return <div className="public-menu">
     <header className="public-header"><div className="public-brand"><span><CupSoda size={22} /></span><div><strong>Batidinha do Rick</strong><small>{online ? `Cardápio online • ${storeOpen ? "Loja aberta" : "Loja fechada"}${minimumOrder ? ` • Mín. ${money.format(minimumOrder)}` : ""}` : "Gelada, cremosa e feita para você."}</small></div></div><button className="cart-button" onClick={() => setCartOpen(true)}><ShoppingBag size={19} /><span>{cartCount}</span><b>{money.format(cartTotal)}</b></button></header>
     {!browserOnline && <div className="offline-banner" role="status"><strong>Você está sem internet</strong><span>O cardápio salvo continua disponível, mas o envio do pedido precisará de conexão.</span></div>}
     {!storeOpen && <div className="store-closed-banner"><strong>Loja fechada no momento</strong><span>Você pode consultar o cardápio, mas novos pedidos estão temporariamente pausados.</span></div>}
-    <section className="public-hero"><div><small>🥤 BATIDINHA GELADA • ENTREGA RÁPIDA</small><h1>Sua batidinha, do seu jeito.</h1><p>Escolha seus sabores favoritos e receba geladinha em casa.</p><button disabled={!storeOpen} onClick={() => setBuilderOpen(true)}>Personalizar minha batidinha <Plus size={18} /></button></div></section>
+    <section className="public-hero"><div><small>🥤 BATIDINHA GELADA • ENTREGA RÁPIDA</small><h1>Sua batidinha, do seu jeito.</h1><p>Escolha seus sabores favoritos e receba geladinha em casa.</p><div className="hero-actions"><button disabled={!storeOpen} onClick={() => setBuilderOpen(true)}>Personalizar minha batidinha <Plus size={18} /></button><button className="share-menu" onClick={shareMenu}><Share2 size={17} /> {shareFeedback}</button></div></div></section>
     <section className="benefit-strip" aria-label="Diferenciais da Batidinha do Rick"><article><Sparkles size={21} /><div><strong>Feita na hora</strong><span>Cremosa e bem gelada</span></div></article><article><MapPin size={21} /><div><strong>Entrega ou retirada</strong><span>Escolha ao finalizar</span></div></article></section>
     <nav className="category-pills"><button className={activeCategory === "all" ? "active" : ""} onClick={() => setActiveCategory("all")}>Todos</button>{categories.filter((item) => item.active).map((item) => <button key={item.id} className={activeCategory === item.id ? "active" : ""} onClick={() => setActiveCategory(item.id)}>{item.name}</button>)}</nav>
     <div className="menu-search"><label><Search size={18} /><input value={query} onChange={(event) => setQuery(event.target.value)} type="search" placeholder="Buscar sabor, combo ou produto..." aria-label="Buscar no cardápio" />{query && <button aria-label="Limpar busca" onClick={() => setQuery("")}><X size={16} /></button>}</label></div>
