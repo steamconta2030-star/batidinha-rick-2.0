@@ -84,7 +84,7 @@ main { min-width: 0; }.topbar { height: 84px; background: #fffdfa; border-bottom
 .admin-login, .final-card { border-color: #eadcf1; }
 .title-actions { display: flex; align-items: center; gap: 9px; }
 .title-actions button { border: 1px solid #dfd1e8; background: #fff; color: #5a246e; border-radius: 11px; padding: 11px 14px; display: inline-flex; align-items: center; gap: 7px; font-weight: 800; }
-.title-actions button.primary { color: #fff; border-color: transparent; }
+.title-actions button.primary { color: #fff; background: #b93620; border-color: transparent; }
 @media (max-width: 680px) { .title-actions { width: 100%; } .title-actions button { flex: 1; justify-content: center; } }
 .menu-photo:has(img) { height: 280px; background: #080808; }
 .menu-photo img { object-fit: contain; }
