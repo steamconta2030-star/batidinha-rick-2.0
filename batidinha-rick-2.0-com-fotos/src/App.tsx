@@ -21,6 +21,7 @@ export default function App() {
   const [query, setQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [showForm, setShowForm] = useState(false);
+  const [showCategoryForm, setShowCategoryForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [imagePreview, setImagePreview] = useState("");
   const [savingProduct, setSavingProduct] = useState(false);
@@ -69,15 +70,24 @@ export default function App() {
     if (error) setProducts((current) => current.map((item) => item.id === id ? product : item));
   }
 
-  async function addCategory() {
-    const name = window.prompt("Nome da nova categoria:")?.trim();
+  function addCategory() {
+    setShowCategoryForm(true);
+  }
+
+  async function saveCategory(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const name = String(new FormData(event.currentTarget).get("name") ?? "").trim();
     if (!name) return;
     if (!supabase) {
       setCategories((current) => [...current, { id: crypto.randomUUID(), name, active: true }]);
+      setShowCategoryForm(false);
       return;
     }
     const { data, error } = await supabase.from("categories").insert({ store_id: STORE_ID, name, position: categories.length, active: true }).select("id,name,active").single();
-    if (!error && data) setCategories((current) => [...current, { id: data.id, name: data.name, active: data.active }]);
+    if (!error && data) {
+      setCategories((current) => [...current, { id: data.id, name: data.name, active: data.active }]);
+      setShowCategoryForm(false);
+    }
   }
 
   function closeProductForm() {
@@ -199,6 +209,7 @@ export default function App() {
       </main>
 
       {showForm && <div className="modal-backdrop" onMouseDown={closeProductForm}><form className="modal" onMouseDown={(e) => e.stopPropagation()} onSubmit={saveProduct}><p className="eyebrow">{editingProduct ? "EDITAR ITEM" : "NOVO ITEM"}</p><h2>{editingProduct ? "Editar produto" : "Cadastrar produto"}</h2><label>Nome<input name="name" required defaultValue={editingProduct?.name} placeholder="Ex.: Batidinha de morango" /></label><label>Descrição<textarea name="description" required defaultValue={editingProduct?.description} placeholder="Ingredientes e apresentação" /></label><label className="image-upload"><span><ImagePlus size={18} /> Foto do produto <small>JPG, PNG ou WebP — até 5 MB</small></span><input name="imageFile" type="file" accept="image/*" onChange={(event) => { const file = event.target.files?.[0]; if (file) setImagePreview(URL.createObjectURL(file)); }} /></label>{imagePreview && <div className="image-preview"><img src={imagePreview} alt="Pré-visualização do produto" /></div>}<label>Ou use um link de imagem <span className="optional">(opcional)</span><input name="imageUrl" type="url" defaultValue={editingProduct?.imageUrl} placeholder="https://..." /></label><div className="form-row"><label>Categoria<select name="category" defaultValue={editingProduct?.categoryId ?? categories[0]?.id}>{categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select></label><label>Preço<input name="price" required min="0" step="0.01" type="number" defaultValue={editingProduct?.price} placeholder="0,00" /></label></div><div className="modal-actions"><button type="button" disabled={savingProduct} onClick={closeProductForm}>Cancelar</button><button className="primary" type="submit" disabled={savingProduct}>{savingProduct ? "Enviando foto..." : editingProduct ? "Salvar alterações" : "Salvar produto"}</button></div></form></div>}
+      {showCategoryForm && <div className="modal-backdrop" onMouseDown={() => setShowCategoryForm(false)}><form className="modal" onMouseDown={(event) => event.stopPropagation()} onSubmit={saveCategory}><p className="eyebrow">NOVA CATEGORIA</p><h2>Cadastrar categoria</h2><label>Nome<input name="name" required autoFocus placeholder="Ex.: Combos" /></label><div className="modal-actions"><button type="button" onClick={() => setShowCategoryForm(false)}>Cancelar</button><button className="primary" type="submit">Salvar categoria</button></div></form></div>}
     </div>
   </AdminAuth>;
 }
