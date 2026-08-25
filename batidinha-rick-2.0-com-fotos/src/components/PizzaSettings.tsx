@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import type { FormEvent } from "react";
 import { Check, CircleDollarSign, Plus, Settings2 } from "lucide-react";
 import { initialCrusts, initialFlavors } from "../data/pizza";
 import { useOnlineMenu } from "../hooks/useOnlineMenu";
@@ -18,6 +19,7 @@ export default function PizzaSettings() {
   const [selectedFlavors, setSelectedFlavors] = useState<string[]>(["morango"]);
   const [selectedCrust, setSelectedCrust] = useState("tradicional");
   const [selectedExtras, setSelectedExtras] = useState<string[]>([]);
+  const [showFlavorForm, setShowFlavorForm] = useState(false);
   const size = sizes.find((item) => item.id === selectedSize) ?? sizes[0];
   const chosenFlavors = flavors.filter((flavor) => selectedFlavors.includes(flavor.id));
   const flavorPrice = Math.max(size.basePrice, ...chosenFlavors.map((flavor) => flavor.priceBySize[selectedSize] ?? size.basePrice));
@@ -41,18 +43,29 @@ export default function PizzaSettings() {
   function chooseFlavor(id: string) {
     setSelectedFlavors((current) => current.includes(id) ? current.filter((item) => item !== id) : current.length >= size.maxFlavors ? [...current.slice(1), id] : [...current, id]);
   }
-  async function addFlavor() {
-    const name = window.prompt("Nome do novo sabor:")?.trim(); if (!name) return;
-    const ingredients = window.prompt("Ingredientes principais:")?.trim() ?? "";
-    const priceBySize = Object.fromEntries(sizes.map((item) => [item.id, item.basePrice]));
+  function addFlavor() {
+    setShowFlavorForm(true);
+  }
+  async function saveFlavor(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const name = String(form.get("name") ?? "").trim();
+    const ingredients = String(form.get("ingredients") ?? "").trim();
+    if (!name) return;
+    const priceBySize = Object.fromEntries(sizes.map((item) => {
+      const price = Number(form.get(`price-${item.id}`));
+      return [item.id, Number.isFinite(price) && price >= 0 ? price : item.basePrice];
+    }));
     if (!supabase) {
       setFlavors((current) => [...current, { id: crypto.randomUUID(), name, ingredients, priceBySize, active: true }]);
+      setShowFlavorForm(false);
       return;
     }
     const { data, error } = await supabase.from("pizza_flavors").insert({ store_id: "10000000-0000-4000-8000-000000000001", name, ingredients, position: flavors.length, active: true }).select("id,name,ingredients,active").single();
     if (error || !data) return;
-    await supabase.from("pizza_flavor_prices").insert(sizes.map((item) => ({ flavor_id: data.id, size_id: item.id, price: item.basePrice })));
+    await supabase.from("pizza_flavor_prices").insert(sizes.map((item) => ({ flavor_id: data.id, size_id: item.id, price: priceBySize[item.id] })));
     setFlavors((current) => [...current, { id: data.id, name: data.name, ingredients: data.ingredients, priceBySize, active: data.active }]);
+    setShowFlavorForm(false);
   }
   async function addCrust() {
     const name = window.prompt("Nome do novo preparo:")?.trim(); if (!name) return;
@@ -76,12 +89,12 @@ export default function PizzaSettings() {
     if (data) setExtras((current) => [...current, { id: data.id, name: data.name, price: Number(data.price), active: data.active }]);
   }
 
-  return <section className="content pizza-settings">
+  return <><section className="content pizza-settings">
     <div className="title-row"><div><p className="eyebrow">CONFIGURAÇÃO DAS BATIDINHAS</p><h1>Personalização das batidinhas</h1><p>Defina quantidades, sabores, preparo e adicionais do cardápio.</p></div><div className="title-actions"><button onClick={addExtra}><Plus size={18} /> Adicional</button><button className="primary" onClick={addFlavor}><Plus size={18} /> Novo sabor</button></div></div>
     <div className="settings-grid"><div className="settings-column">
       <article className="settings-card"><header><div><span className="step-number">1</span><div><h2>Tamanhos</h2><p>Quantidade de unidades e sabores permitidos.</p></div></div></header><div className="size-list">{sizes.map((item) => <button key={item.id} className={selectedSize === item.id ? "selected" : ""} onClick={() => { setSelectedSize(item.id); setSelectedFlavors((current) => current.slice(0, item.maxFlavors)); }}><strong>{item.name}</strong><span>{item.slices} unidades • até {item.maxFlavors} sabor{item.maxFlavors > 1 ? "es" : ""}</span><small>A partir de {money.format(item.basePrice)}</small></button>)}</div></article>
       <article className="settings-card"><header><div><span className="step-number">2</span><div><h2>Sabores</h2><p>Selecione até {size.maxFlavors} para testar.</p></div></div><button className="icon-action" onClick={addFlavor}><Plus size={17} /></button></header><div className="flavor-list">{flavors.filter((flavor) => flavor.active).map((flavor) => { const selected = selectedFlavors.includes(flavor.id); return <button key={flavor.id} className={selected ? "selected" : ""} onClick={() => chooseFlavor(flavor.id)}><span className="check">{selected && <Check size={14} />}</span><div><strong>{flavor.name}</strong><small>{flavor.ingredients}</small></div><b>{money.format(flavor.priceBySize[selectedSize] ?? size.basePrice)}</b></button>; })}</div></article>
       <article className="settings-card"><header><div><span className="step-number">3</span><div><h2>Preparo e adicionais</h2><p>Preferências de preparo e complementos com acréscimo.</p></div></div><button className="icon-action" onClick={addCrust}><Plus size={17} /></button></header><div className="option-chips">{crusts.filter((item) => item.active).map((item) => <button key={item.id} className={selectedCrust === item.id ? "selected" : ""} onClick={() => setSelectedCrust(item.id)}>{item.name}<small>{item.price ? `+ ${money.format(item.price)}` : "Incluso"}</small></button>)}</div><div className="option-chips extras">{extras.filter((item) => item.active).map((item) => <button key={item.id} className={selectedExtras.includes(item.id) ? "selected" : ""} onClick={() => setSelectedExtras((current) => current.includes(item.id) ? current.filter((id) => id !== item.id) : [...current, item.id])}>{item.name}<small>+ {money.format(item.price)}</small></button>)}</div></article>
     </div><aside className="simulator"><div className="simulator-heading"><Settings2 size={19} /><span>RESUMO DO PEDIDO</span></div><div className="simulation-summary"><span>Batidinha {size.name}</span><h2>{summary || "Escolha um sabor"}</h2><p>{chosenFlavors.length} sabor{chosenFlavors.length === 1 ? "" : "es"} selecionado{chosenFlavors.length === 1 ? "" : "s"}</p><p>{crusts.find((item) => item.id === selectedCrust)?.name}</p>{selectedExtras.length > 0 && <p>{extras.filter((item) => selectedExtras.includes(item.id)).map((item) => item.name).join(", ")}</p>}</div><div className="price-rule"><CircleDollarSign size={18} /><div><strong>Regra de preço</strong><span>Nas combinações, o preço segue a opção selecionada.</span></div></div><div className="price-breakdown"><p><span>Sabores</span><b>{money.format(flavorPrice)}</b></p><p><span>Preparo</span><b>{money.format(crustPrice)}</b></p><p><span>Adicionais</span><b>{money.format(extrasPrice)}</b></p><footer><span>Total</span><strong>{money.format(total)}</strong></footer></div></aside></div>
-  </section>;
+  </section>{showFlavorForm && <div className="modal-backdrop" onMouseDown={() => setShowFlavorForm(false)}><form className="modal" onMouseDown={(event) => event.stopPropagation()} onSubmit={saveFlavor}><p className="eyebrow">NOVO SABOR</p><h2>Cadastrar sabor</h2><label>Nome do sabor<input name="name" required autoFocus placeholder="Ex.: Chocolate" /></label><label>Descrição<textarea name="ingredients" required placeholder="Descreva o sabor e os principais ingredientes" /></label><div className="form-row">{sizes.map((item) => <label key={item.id}>Preço — {item.name}<input name={`price-${item.id}`} required min="0" step="0.01" type="number" defaultValue={item.basePrice} /></label>)}</div><div className="modal-actions"><button type="button" onClick={() => setShowFlavorForm(false)}>Cancelar</button><button className="primary" type="submit">Salvar sabor</button></div></form></div>}</>;
 }
