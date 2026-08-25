@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
-import { Banknote, Bike, ChefHat, ClipboardList, Cloud, CookingPot, Database, Eye, EyeOff, Flame, LayoutDashboard, PackagePlus, Pencil, Pizza, Save, Search, Settings, Store, Tags } from "lucide-react";
+import { Banknote, Bike, ChefHat, ClipboardList, Cloud, CookingPot, CupSoda, Database, Eye, EyeOff, Flame, LayoutDashboard, PackagePlus, Pencil, Save, Search, Settings, Store, Tags } from "lucide-react";
 import PizzaSettings from "./components/PizzaSettings";
 import PublicMenu from "./components/PublicMenu";
 import OrdersBoard from "./components/OrdersBoard";
@@ -135,7 +135,7 @@ export default function App() {
           <button className={section === "dashboard" ? "active" : ""} onClick={() => setSection("dashboard")}><LayoutDashboard size={19} /> Visão geral</button>
           <button className={section === "kitchen" ? "active" : ""} onClick={() => setSection("kitchen")}><CookingPot size={19} /> Cozinha</button>
           <button className={section === "cash" ? "active" : ""} onClick={() => setSection("cash")}><Banknote size={19} /> Caixa e relatórios</button>
-          <button className={section === "products" ? "active" : ""} onClick={() => setSection("products")}><Pizza size={19} /> Produtos</button>
+          <button className={section === "products" ? "active" : ""} onClick={() => setSection("products")}><CupSoda size={19} /> Produtos</button>
           <button className={section === "pizza" ? "active" : ""} onClick={() => setSection("pizza")}><ChefHat size={19} /> Montagem</button>
           <button className={section === "orders" ? "active" : ""} onClick={() => setSection("orders")}><ClipboardList size={19} /> Pedidos</button>
           <button className={section === "delivery" ? "active" : ""} onClick={() => setSection("delivery")}><Bike size={19} /> Entregas</button>
@@ -161,7 +161,7 @@ export default function App() {
 
           <div className="product-grid">
             {visible.map((product) => <article className="product-card" key={product.id}>
-              <div className="product-image">{product.imageUrl ? <img src={product.imageUrl} alt={product.name} /> : <Pizza size={42} />}<span className={product.active ? "available" : "unavailable"}>{product.active ? "Disponível" : "Oculto"}</span></div>
+              <div className="product-image">{product.imageUrl ? <img src={product.imageUrl} alt={product.name} /> : <CupSoda size={42} />}<span className={product.active ? "available" : "unavailable"}>{product.active ? "Disponível" : "Oculto"}</span></div>
               <div className="product-body"><small>{categories.find((category) => category.id === product.categoryId)?.name}</small><h2>{product.name}</h2><p>{product.description}</p><footer><strong>{money.format(product.price)}</strong><span className="product-actions"><button onClick={() => { setEditingProduct(product); setShowForm(true); }} title={`Editar ${product.name}`} aria-label={`Editar ${product.name}`}><Pencil size={17} /></button><button onClick={() => toggleProduct(product.id)} title={product.active ? "Ocultar do cardápio" : "Exibir no cardápio"} aria-label={product.active ? `Ocultar ${product.name}` : `Exibir ${product.name}`}>{product.active ? <Eye size={18} /> : <EyeOff size={18} />}</button></span></footer></div>
             </article>)}
           </div>
