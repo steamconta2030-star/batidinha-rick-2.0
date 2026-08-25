@@ -143,7 +143,6 @@ export default function App() {
           <button onClick={() => setSection("public")}><Store size={19} /> Ver cardápio</button>
           <button onClick={addCategory}><Tags size={19} /> Categorias</button>
         </nav>
-        <div className="wave-card complete"><small>CICLO CONCLUÍDO</small><strong>Base operacional</strong><span>Cardápio e pedidos integrados</span><div><i style={{ width: "100%" }} /></div></div>
       </aside>
 
       <main>
