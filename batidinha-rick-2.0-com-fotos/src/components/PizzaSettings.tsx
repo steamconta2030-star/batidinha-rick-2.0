@@ -20,6 +20,7 @@ export default function PizzaSettings() {
   const [selectedCrust, setSelectedCrust] = useState("tradicional");
   const [selectedExtras, setSelectedExtras] = useState<string[]>([]);
   const [showFlavorForm, setShowFlavorForm] = useState(false);
+  const [optionForm, setOptionForm] = useState<"crust" | "extra" | null>(null);
   const size = sizes.find((item) => item.id === selectedSize) ?? sizes[0];
   const chosenFlavors = flavors.filter((flavor) => selectedFlavors.includes(flavor.id));
   const flavorPrice = Math.max(size.basePrice, ...chosenFlavors.map((flavor) => flavor.priceBySize[selectedSize] ?? size.basePrice));
@@ -67,26 +68,38 @@ export default function PizzaSettings() {
     setFlavors((current) => [...current, { id: data.id, name: data.name, ingredients: data.ingredients, priceBySize, active: data.active }]);
     setShowFlavorForm(false);
   }
-  async function addCrust() {
-    const name = window.prompt("Nome do novo preparo:")?.trim(); if (!name) return;
-    const price = Number(window.prompt("Acréscimo do preparo:", "8")?.replace(",", ".") ?? 0);
-    if (!supabase) {
-      setCrusts((current) => [...current, { id: crypto.randomUUID(), name, price: Number.isFinite(price) ? price : 0, active: true }]);
-      return;
-    }
-    const { data } = await supabase.from("pizza_options").insert({ store_id: "10000000-0000-4000-8000-000000000001", type: "crust", name, price: Number.isFinite(price) ? price : 0, position: crusts.length, active: true }).select("id,name,price,active").single();
-    if (data) setCrusts((current) => [...current, { id: data.id, name: data.name, price: Number(data.price), active: data.active }]);
+  function addCrust() {
+    setOptionForm("crust");
   }
-  async function addExtra() {
-    const name = window.prompt("Nome do novo adicional:")?.trim(); if (!name) return;
-    const price = Number(window.prompt("Valor do adicional:", "2")?.replace(",", ".") ?? 0);
+  function addExtra() {
+    setOptionForm("extra");
+  }
+  async function saveOption(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!optionForm) return;
+    const form = new FormData(event.currentTarget);
+    const name = String(form.get("name") ?? "").trim();
+    const price = Number(form.get("price"));
+    if (!name) return;
     const safePrice = Number.isFinite(price) && price >= 0 ? price : 0;
-    if (!supabase) {
-      setExtras((current) => [...current, { id: crypto.randomUUID(), name, price: safePrice, active: true }]);
-      return;
+    if (optionForm === "crust") {
+      if (!supabase) {
+        setCrusts((current) => [...current, { id: crypto.randomUUID(), name, price: safePrice, active: true }]);
+        setOptionForm(null);
+        return;
+      }
+      const { data } = await supabase.from("pizza_options").insert({ store_id: "10000000-0000-4000-8000-000000000001", type: "crust", name, price: safePrice, position: crusts.length, active: true }).select("id,name,price,active").single();
+      if (data) setCrusts((current) => [...current, { id: data.id, name: data.name, price: Number(data.price), active: data.active }]);
+    } else {
+      if (!supabase) {
+        setExtras((current) => [...current, { id: crypto.randomUUID(), name, price: safePrice, active: true }]);
+        setOptionForm(null);
+        return;
+      }
+      const { data } = await supabase.from("pizza_options").insert({ store_id: "10000000-0000-4000-8000-000000000001", type: "extra", name, price: safePrice, position: extras.length, active: true }).select("id,name,price,active").single();
+      if (data) setExtras((current) => [...current, { id: data.id, name: data.name, price: Number(data.price), active: data.active }]);
     }
-    const { data } = await supabase.from("pizza_options").insert({ store_id: "10000000-0000-4000-8000-000000000001", type: "extra", name, price: safePrice, position: extras.length, active: true }).select("id,name,price,active").single();
-    if (data) setExtras((current) => [...current, { id: data.id, name: data.name, price: Number(data.price), active: data.active }]);
+    setOptionForm(null);
   }
 
   return <><section className="content pizza-settings">
@@ -96,5 +109,5 @@ export default function PizzaSettings() {
       <article className="settings-card"><header><div><span className="step-number">2</span><div><h2>Sabores</h2><p>Selecione até {size.maxFlavors} para testar.</p></div></div><button className="icon-action" onClick={addFlavor}><Plus size={17} /></button></header><div className="flavor-list">{flavors.filter((flavor) => flavor.active).map((flavor) => { const selected = selectedFlavors.includes(flavor.id); return <button key={flavor.id} className={selected ? "selected" : ""} onClick={() => chooseFlavor(flavor.id)}><span className="check">{selected && <Check size={14} />}</span><div><strong>{flavor.name}</strong><small>{flavor.ingredients}</small></div><b>{money.format(flavor.priceBySize[selectedSize] ?? size.basePrice)}</b></button>; })}</div></article>
       <article className="settings-card"><header><div><span className="step-number">3</span><div><h2>Preparo e adicionais</h2><p>Preferências de preparo e complementos com acréscimo.</p></div></div><button className="icon-action" onClick={addCrust}><Plus size={17} /></button></header><div className="option-chips">{crusts.filter((item) => item.active).map((item) => <button key={item.id} className={selectedCrust === item.id ? "selected" : ""} onClick={() => setSelectedCrust(item.id)}>{item.name}<small>{item.price ? `+ ${money.format(item.price)}` : "Incluso"}</small></button>)}</div><div className="option-chips extras">{extras.filter((item) => item.active).map((item) => <button key={item.id} className={selectedExtras.includes(item.id) ? "selected" : ""} onClick={() => setSelectedExtras((current) => current.includes(item.id) ? current.filter((id) => id !== item.id) : [...current, item.id])}>{item.name}<small>+ {money.format(item.price)}</small></button>)}</div></article>
     </div><aside className="simulator"><div className="simulator-heading"><Settings2 size={19} /><span>RESUMO DO PEDIDO</span></div><div className="simulation-summary"><span>Batidinha {size.name}</span><h2>{summary || "Escolha um sabor"}</h2><p>{chosenFlavors.length} sabor{chosenFlavors.length === 1 ? "" : "es"} selecionado{chosenFlavors.length === 1 ? "" : "s"}</p><p>{crusts.find((item) => item.id === selectedCrust)?.name}</p>{selectedExtras.length > 0 && <p>{extras.filter((item) => selectedExtras.includes(item.id)).map((item) => item.name).join(", ")}</p>}</div><div className="price-rule"><CircleDollarSign size={18} /><div><strong>Regra de preço</strong><span>Nas combinações, o preço segue a opção selecionada.</span></div></div><div className="price-breakdown"><p><span>Sabores</span><b>{money.format(flavorPrice)}</b></p><p><span>Preparo</span><b>{money.format(crustPrice)}</b></p><p><span>Adicionais</span><b>{money.format(extrasPrice)}</b></p><footer><span>Total</span><strong>{money.format(total)}</strong></footer></div></aside></div>
-  </section>{showFlavorForm && <div className="modal-backdrop" onMouseDown={() => setShowFlavorForm(false)}><form className="modal" onMouseDown={(event) => event.stopPropagation()} onSubmit={saveFlavor}><p className="eyebrow">NOVO SABOR</p><h2>Cadastrar sabor</h2><label>Nome do sabor<input name="name" required autoFocus placeholder="Ex.: Chocolate" /></label><label>Descrição<textarea name="ingredients" required placeholder="Descreva o sabor e os principais ingredientes" /></label><div className="form-row">{sizes.map((item) => <label key={item.id}>Preço — {item.name}<input name={`price-${item.id}`} required min="0" step="0.01" type="number" defaultValue={item.basePrice} /></label>)}</div><div className="modal-actions"><button type="button" onClick={() => setShowFlavorForm(false)}>Cancelar</button><button className="primary" type="submit">Salvar sabor</button></div></form></div>}</>;
+  </section>{showFlavorForm && <div className="modal-backdrop" onMouseDown={() => setShowFlavorForm(false)}><form className="modal" onMouseDown={(event) => event.stopPropagation()} onSubmit={saveFlavor}><p className="eyebrow">NOVO SABOR</p><h2>Cadastrar sabor</h2><label>Nome do sabor<input name="name" required autoFocus placeholder="Ex.: Chocolate" /></label><label>Descrição<textarea name="ingredients" required placeholder="Descreva o sabor e os principais ingredientes" /></label><div className="form-row">{sizes.map((item) => <label key={item.id}>Preço — {item.name}<input name={`price-${item.id}`} required min="0" step="0.01" type="number" defaultValue={item.basePrice} /></label>)}</div><div className="modal-actions"><button type="button" onClick={() => setShowFlavorForm(false)}>Cancelar</button><button className="primary" type="submit">Salvar sabor</button></div></form></div>}{optionForm && <div className="modal-backdrop" onMouseDown={() => setOptionForm(null)}><form className="modal" onMouseDown={(event) => event.stopPropagation()} onSubmit={saveOption}><p className="eyebrow">{optionForm === "extra" ? "NOVO ADICIONAL" : "NOVO PREPARO"}</p><h2>{optionForm === "extra" ? "Cadastrar adicional" : "Cadastrar modo de preparo"}</h2><label>Nome<input name="name" required autoFocus placeholder={optionForm === "extra" ? "Ex.: Leite em pó" : "Ex.: Menos doce"} /></label><label>{optionForm === "extra" ? "Valor do adicional" : "Acréscimo do preparo"}<input name="price" required min="0" step="0.01" type="number" defaultValue={optionForm === "extra" ? 2 : 0} /></label><div className="modal-actions"><button type="button" onClick={() => setOptionForm(null)}>Cancelar</button><button className="primary" type="submit">Salvar</button></div></form></div>}</>;
 }
