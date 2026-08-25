@@ -255,10 +255,53 @@ main { min-width: 0; }.topbar { height: 84px; background: #fffdfa; border-bottom
 .product-actions { display: flex; gap: 8px; }
 .product-body footer button { cursor: pointer; }
 .product-body footer button:hover { border-color: #b33c24; color: #b33c24; background: #fff7f2; }
-
 .image-upload { padding: 14px; border: 1px dashed #c9aeb9; border-radius: 13px; background: #fff; cursor: pointer; }
 .image-upload > span { display: flex; align-items: center; gap: 8px; }
 .image-upload small { color: #8a7c84; font-weight: 500; }
 .image-upload input { padding: 9px 0 0; border: 0; background: transparent; }
 .image-preview { overflow: hidden; height: 170px; margin-top: 12px; border-radius: 14px; background: #eee7e2; }
 .image-preview img { width: 100%; height: 100%; object-fit: cover; }
+
+/* Identidade administrativa — Batidinha do Rick */
+.app-shell { --admin-purple: #6f1d96; --admin-magenta: #d6259b; --admin-gold: #f4b942; --admin-ink: #32143d; background: #f8f3fa; color: var(--admin-ink); }
+.sidebar { background: linear-gradient(180deg, #220934, #351047); color: #f8effb; border-right-color: #ffffff10; }
+.brand-mark { color: #371044; background: linear-gradient(145deg, #ffd76a, var(--admin-gold)); box-shadow: 0 8px 24px #f4b94230; }
+.brand small { color: #cfb9d8; }
+.sidebar nav button { color: #e4d4ea; }
+.sidebar nav button:hover { color: #fff; background: #ffffff0d; }
+.sidebar nav button.active { color: #fff; background: linear-gradient(135deg, #6f1d96, #a524a8); box-shadow: 0 10px 25px #14031f45; }
+.topbar { border-bottom-color: #e3d7e8; background: #fffdfef0; backdrop-filter: blur(12px); }
+.topbar > div > span, .data-status { color: #806c86 !important; }
+.primary, .advance-order, .kitchen-column article button, .builder-footer button, .cart-drawer > footer button { color: #fff; background: linear-gradient(135deg, var(--admin-purple), var(--admin-magenta)); box-shadow: 0 8px 20px #8f279f25; }
+.primary:hover { background: linear-gradient(135deg, #5d177e, #bd218b); }
+.eyebrow, .menu-title small, .order-card header span, .recent-panel > div > span { color: #9e269f !important; }
+.content h1, .content h2, .dashboard-metrics strong, .payment-cards strong { color: var(--admin-ink); }
+.stats article, .dashboard-metrics article, .revenue-panel, .recent-panel, .report-table, .delivery-panel, .settings-card, .product-card, .store-settings-card { border-color: #e5d9e9; background: #fff; box-shadow: 0 9px 28px #43125408; }
+.dashboard-metrics article > span, .zone-icon, .step-number { color: #81239d; background: #f1e5f5; }
+.revenue-panel header > strong, .product-body footer > strong, .size-list small, .flavor-list b, .zone-list b { color: #7a1fa8; }
+.revenue-bar i b { background: linear-gradient(90deg, var(--admin-purple), var(--admin-magenta)); }
+.product-card:hover, .settings-card:hover { border-color: #cdaed8; }
+.product-actions button:hover, .product-body footer button:hover { color: #7a1fa8; border-color: #b989ca; background: #faf4fc; }
+.size-list button.selected, .flavor-list button.selected, .option-chips button.selected { color: #5e1a78; border-color: #a946c1; background: #f8edfb; }
+.simulator { background: linear-gradient(165deg, #220934, #401255); box-shadow: 0 22px 55px #2b073a30; }
+.simulator-heading, .simulation-summary > span, .price-breakdown footer strong { color: #f0a8dd; }
+.price-rule { color: #ead5f0; background: #ffffff0d; }
+.price-breakdown footer { border-top-color: #ffffff18; }
+.order-card.status-pending { border-top-color: var(--admin-gold); }
+.order-card.status-confirmed, .order-card.status-preparing { border-top-color: #9b39b5; }
+.order-card.status-ready { border-top-color: #d6259b; }
+.order-customer { background: #f7f0f9; }
+.cancel-order { color: #8d267b; background: #f6e7f3; }
+.live-badge { color: #6f1d96; border-color: #d9bce2; background: #f5eafa; }
+.title-actions button { color: #63237a; border-color: #ddc9e5; }
+.title-actions button.primary { color: #fff; background: linear-gradient(135deg, var(--admin-purple), var(--admin-magenta)); }
+.modal { border: 1px solid #e3d3e8; background: #fffafd; }
+.toolbar label:focus-within, .modal input:focus, .modal textarea:focus, .modal select:focus { border-color: #a946c1; box-shadow: 0 0 0 3px #a946c118; }
+.admin-auth { background: radial-gradient(circle at top, #f9edfc, #f8fafc 58%); color: var(--admin-ink, #32143d); }
+.admin-login-brand > span { color: #371044; background: linear-gradient(145deg, #ffd76a, #f4b942); }
+.admin-login-icon { color: #7a1fa8; background: #f4e8f7; }
+.admin-login-error { color: #8d256f; background: #faeaf5; }
+.store-status.closed { color: #8d256f; border-color: #e5bfd9; background: #faedf6; }
+.store-status.closed i { background: #d6259b; }
+.image-upload { border-color: #caa9d6; background: #fdf9fe; }
+.image-upload:hover { border-color: #9841b2; background: #faf2fc; }
