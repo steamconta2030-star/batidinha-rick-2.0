@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
-import { Banknote, Bike, ChefHat, ClipboardList, Cloud, CookingPot, CupSoda, Database, Eye, EyeOff, Flame, LayoutDashboard, PackagePlus, Pencil, Save, Search, Settings, Store, Tags } from "lucide-react";
+import { Banknote, Bike, ChefHat, ClipboardList, Cloud, CookingPot, CupSoda, Database, Eye, EyeOff, Flame, ImagePlus, LayoutDashboard, PackagePlus, Pencil, Save, Search, Settings, Store, Tags } from "lucide-react";
 import PizzaSettings from "./components/PizzaSettings";
 import PublicMenu from "./components/PublicMenu";
 import OrdersBoard from "./components/OrdersBoard";
@@ -22,6 +22,8 @@ export default function App() {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [showForm, setShowForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [imagePreview, setImagePreview] = useState("");
+  const [savingProduct, setSavingProduct] = useState(false);
   const [storeOpen, setStoreOpen] = usePersistentState("batidinha:admin:store-open", true);
   const [storeWhatsapp, setStoreWhatsapp] = usePersistentState("batidinha:admin:whatsapp", "31985011514");
   const [minimumOrder, setMinimumOrder] = usePersistentState("batidinha:admin:minimum-order", 0);
@@ -81,12 +83,36 @@ export default function App() {
   function closeProductForm() {
     setShowForm(false);
     setEditingProduct(null);
+    setImagePreview("");
+  }
+
+  function openProductForm(product: Product | null = null) {
+    setEditingProduct(product);
+    setImagePreview(product?.imageUrl ?? "");
+    setShowForm(true);
+  }
+
+  async function uploadProductImage(file: File) {
+    if (!supabase) throw new Error("O Supabase não está conectado.");
+    if (!file.type.startsWith("image/")) throw new Error("Selecione um arquivo de imagem.");
+    if (file.size > 5 * 1024 * 1024) throw new Error("A imagem deve ter no máximo 5 MB.");
+    const extension = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
+    const path = `${STORE_ID}/${crypto.randomUUID()}.${extension}`;
+    const { error } = await supabase.storage.from("product-images").upload(path, file, { cacheControl: "3600", contentType: file.type, upsert: false });
+    if (error) throw error;
+    return supabase.storage.from("product-images").getPublicUrl(path).data.publicUrl;
   }
 
   async function saveProduct(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (savingProduct) return;
+    setSavingProduct(true);
     const data = new FormData(event.currentTarget);
-    const details = { name: String(data.get("name")).trim(), description: String(data.get("description")).trim(), category_id: String(data.get("category")), price: Number(data.get("price")), image_path: String(data.get("imageUrl") ?? "").trim() || null };
+    try {
+    const imageFile = data.get("imageFile");
+    let imagePath = String(data.get("imageUrl") ?? "").trim() || editingProduct?.imageUrl || null;
+    if (imageFile instanceof File && imageFile.size > 0) imagePath = await uploadProductImage(imageFile);
+    const details = { name: String(data.get("name")).trim(), description: String(data.get("description")).trim(), category_id: String(data.get("category")), price: Number(data.get("price")), image_path: imagePath };
     if (editingProduct) {
       const updated: Product = { ...editingProduct, categoryId: details.category_id, name: details.name, description: details.description, price: details.price, imageUrl: details.image_path ?? "" };
       setProducts((current) => current.map((product) => product.id === editingProduct.id ? updated : product));
@@ -107,6 +133,11 @@ export default function App() {
     }
     const { data: saved, error } = await supabase.from("products").insert(input).select("id,category_id,name,description,price,image_path,active").single();
     if (!error && saved) { setProducts((current) => [...current, { id: saved.id, categoryId: saved.category_id, name: saved.name, description: saved.description, price: Number(saved.price), imageUrl: saved.image_path ?? "", active: saved.active }]); closeProductForm(); }
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : "Não foi possível salvar o produto.");
+    } finally {
+      setSavingProduct(false);
+    }
   }
 
   async function toggleStore() { const next = !storeOpen; setStoreOpen(next); if (!supabase) return; const { error } = await supabase.from("stores").update({ accepting_orders: next, updated_at: new Date().toISOString() }).eq("id", STORE_ID); if (error) setStoreOpen(!next); }
@@ -148,7 +179,7 @@ export default function App() {
       <main>
         <header className="topbar"><div><span>Painel administrativo</span><strong>{sectionTitle}</strong></div><div className="topbar-actions"><span className="data-status" title={isSupabaseConfigured ? "Supabase conectado" : "Os dados ficam salvos neste navegador"}>{isSupabaseConfigured ? <Cloud size={15} /> : <Database size={15} />}{isSupabaseConfigured ? "Nuvem conectada" : "Salvo neste dispositivo"}</span><button className={`store-status ${storeOpen ? "" : "closed"}`} onClick={toggleStore}><i /> {storeOpen ? "Loja aberta" : "Loja fechada"}</button></div></header>
         {section === "dashboard" ? <Operations view="dashboard" /> : section === "kitchen" ? <Operations view="kitchen" /> : section === "cash" ? <Operations view="cash" /> : section === "pizza" ? <PizzaSettings /> : section === "orders" ? <OrdersBoard /> : section === "delivery" ? <DeliverySettings /> : section === "settings" ? <section className="content"><div className="title-row"><div><p className="eyebrow">OPERAÇÃO DA LOJA</p><h1>Configurações comerciais</h1><p>Defina os dados usados no atendimento e no fechamento dos pedidos.</p></div></div><form className="store-settings-card" onSubmit={saveStoreSettings}><div className={`store-operation ${storeOpen ? "open" : "closed"}`}><div><span><Store size={21} /></span><div><strong>{storeOpen ? "Loja aberta" : "Loja fechada"}</strong><small>{storeOpen ? "O cardápio está aceitando novos pedidos." : "Novos pedidos estão temporariamente bloqueados."}</small></div></div><button type="button" onClick={toggleStore}>{storeOpen ? "Fechar loja" : "Abrir loja"}</button></div><label>WhatsApp da loja<input value={storeWhatsapp} onChange={(event) => setStoreWhatsapp(event.target.value)} inputMode="tel" placeholder="Ex.: (31) 99999-9999" /><small>Será utilizado nos próximos recursos de contato com o cliente.</small></label><label>Pedido mínimo<input value={minimumOrder} onChange={(event) => setMinimumOrder(Math.max(0, Number(event.target.value)))} type="number" min="0" step="0.01" /><small>Use zero caso não queira exigir um valor mínimo.</small></label><footer><span>{settingsSaved ? "Configurações salvas com sucesso." : "As alterações serão aplicadas ao cardápio online."}</span><button className="primary" type="submit"><Save size={17} /> Salvar configurações</button></footer></form></section> : <section className="content">
-          <div className="title-row"><div><p className="eyebrow">GESTÃO DO CARDÁPIO</p><h1>Produtos</h1><p>Cadastre e edite as batidinhas, combos e adicionais que aparecerão no cardápio.</p></div><button className="primary" onClick={() => { setEditingProduct(null); setShowForm(true); }}><PackagePlus size={18} /> Novo produto</button></div>
+          <div className="title-row"><div><p className="eyebrow">GESTÃO DO CARDÁPIO</p><h1>Produtos</h1><p>Cadastre e edite as batidinhas, combos e adicionais que aparecerão no cardápio.</p></div><button className="primary" onClick={() => openProductForm()}><PackagePlus size={18} /> Novo produto</button></div>
 
           <div className="stats">
             <article><span>Produtos cadastrados</span><strong>{products.length}</strong></article>
@@ -161,13 +192,13 @@ export default function App() {
           <div className="product-grid">
             {visible.map((product) => <article className="product-card" key={product.id}>
               <div className="product-image">{product.imageUrl ? <img src={product.imageUrl} alt={product.name} /> : <CupSoda size={42} />}<span className={product.active ? "available" : "unavailable"}>{product.active ? "Disponível" : "Oculto"}</span></div>
-              <div className="product-body"><small>{categories.find((category) => category.id === product.categoryId)?.name}</small><h2>{product.name}</h2><p>{product.description}</p><footer><strong>{money.format(product.price)}</strong><span className="product-actions"><button onClick={() => { setEditingProduct(product); setShowForm(true); }} title={`Editar ${product.name}`} aria-label={`Editar ${product.name}`}><Pencil size={17} /></button><button onClick={() => toggleProduct(product.id)} title={product.active ? "Ocultar do cardápio" : "Exibir no cardápio"} aria-label={product.active ? `Ocultar ${product.name}` : `Exibir ${product.name}`}>{product.active ? <Eye size={18} /> : <EyeOff size={18} />}</button></span></footer></div>
+              <div className="product-body"><small>{categories.find((category) => category.id === product.categoryId)?.name}</small><h2>{product.name}</h2><p>{product.description}</p><footer><strong>{money.format(product.price)}</strong><span className="product-actions"><button onClick={() => openProductForm(product)} title={`Editar ${product.name}`} aria-label={`Editar ${product.name}`}><Pencil size={17} /></button><button onClick={() => toggleProduct(product.id)} title={product.active ? "Ocultar do cardápio" : "Exibir no cardápio"} aria-label={product.active ? `Ocultar ${product.name}` : `Exibir ${product.name}`}>{product.active ? <Eye size={18} /> : <EyeOff size={18} />}</button></span></footer></div>
             </article>)}
           </div>
         </section>}
       </main>
 
-      {showForm && <div className="modal-backdrop" onMouseDown={closeProductForm}><form className="modal" onMouseDown={(e) => e.stopPropagation()} onSubmit={saveProduct}><p className="eyebrow">{editingProduct ? "EDITAR ITEM" : "NOVO ITEM"}</p><h2>{editingProduct ? "Editar produto" : "Cadastrar produto"}</h2><label>Nome<input name="name" required defaultValue={editingProduct?.name} placeholder="Ex.: Batidinha de morango" /></label><label>Descrição<textarea name="description" required defaultValue={editingProduct?.description} placeholder="Ingredientes e apresentação" /></label><label>Endereço da imagem <span className="optional">(opcional)</span><input name="imageUrl" type="url" defaultValue={editingProduct?.imageUrl} placeholder="https://..." /></label><div className="form-row"><label>Categoria<select name="category" defaultValue={editingProduct?.categoryId ?? categories[0]?.id}>{categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select></label><label>Preço<input name="price" required min="0" step="0.01" type="number" defaultValue={editingProduct?.price} placeholder="0,00" /></label></div><div className="modal-actions"><button type="button" onClick={closeProductForm}>Cancelar</button><button className="primary" type="submit">{editingProduct ? "Salvar alterações" : "Salvar produto"}</button></div></form></div>}
+      {showForm && <div className="modal-backdrop" onMouseDown={closeProductForm}><form className="modal" onMouseDown={(e) => e.stopPropagation()} onSubmit={saveProduct}><p className="eyebrow">{editingProduct ? "EDITAR ITEM" : "NOVO ITEM"}</p><h2>{editingProduct ? "Editar produto" : "Cadastrar produto"}</h2><label>Nome<input name="name" required defaultValue={editingProduct?.name} placeholder="Ex.: Batidinha de morango" /></label><label>Descrição<textarea name="description" required defaultValue={editingProduct?.description} placeholder="Ingredientes e apresentação" /></label><label className="image-upload"><span><ImagePlus size={18} /> Foto do produto <small>JPG, PNG ou WebP — até 5 MB</small></span><input name="imageFile" type="file" accept="image/*" onChange={(event) => { const file = event.target.files?.[0]; if (file) setImagePreview(URL.createObjectURL(file)); }} /></label>{imagePreview && <div className="image-preview"><img src={imagePreview} alt="Pré-visualização do produto" /></div>}<label>Ou use um link de imagem <span className="optional">(opcional)</span><input name="imageUrl" type="url" defaultValue={editingProduct?.imageUrl} placeholder="https://..." /></label><div className="form-row"><label>Categoria<select name="category" defaultValue={editingProduct?.categoryId ?? categories[0]?.id}>{categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select></label><label>Preço<input name="price" required min="0" step="0.01" type="number" defaultValue={editingProduct?.price} placeholder="0,00" /></label></div><div className="modal-actions"><button type="button" disabled={savingProduct} onClick={closeProductForm}>Cancelar</button><button className="primary" type="submit" disabled={savingProduct}>{savingProduct ? "Enviando foto..." : editingProduct ? "Salvar alterações" : "Salvar produto"}</button></div></form></div>}
     </div>
   </AdminAuth>;
 }
