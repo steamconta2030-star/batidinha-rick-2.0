@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { type FormEvent, useEffect, useState } from "react";
 import { Banknote, BarChart3, ChefHat, Clock3, CreditCard, Flame, PackageCheck, QrCode, ShoppingBag } from "lucide-react";
 import { useOnlineOrders } from "../hooks/useOnlineOrders";
 import { supabase } from "../lib/supabase";
@@ -8,6 +8,7 @@ const money = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL
 export default function Operations({ view }: { view: "dashboard" | "kitchen" | "cash" }) {
   const { orders, updateStatus } = useOnlineOrders();
   const [cash, setCash] = useState<CashSession[]>([]);
+  const [cashAction, setCashAction] = useState<"open" | "close" | null>(null);
   useEffect(() => { supabase?.from("cash_sessions").select("id,opened_at,opening_amount,closed_at,closing_amount").order("opened_at", { ascending: false }).then(({ data }) => { if (data) setCash(data.map((row) => ({ id: row.id, openedAt: row.opened_at, openingAmount: Number(row.opening_amount), closedAt: row.closed_at ?? undefined, closingAmount: row.closing_amount ? Number(row.closing_amount) : undefined }))); }); }, []);
   const today = new Date().toISOString().slice(0, 10);
   const todayOrders = orders.filter((order) => order.createdAt.slice(0, 10) === today && order.status !== "cancelled");
@@ -16,8 +17,24 @@ export default function Operations({ view }: { view: "dashboard" | "kitchen" | "
   const orderedRevenue = todayOrders.reduce((sum, order) => sum + order.total, 0);
   const activeCash = cash.find((session) => !session.closedAt);
   function move(id: string, status: OrderStatus) { updateStatus(id, status); }
-  async function openCash() { const value = Number(window.prompt("Valor inicial do caixa:", "150")?.replace(",", ".") ?? 0); if (!supabase || !Number.isFinite(value)) return; const { data: auth } = await supabase.auth.getUser(); if (!auth.user) return; const { data } = await supabase.from("cash_sessions").insert({ store_id: "10000000-0000-4000-8000-000000000001", opened_by: auth.user.id, opening_amount: value }).select("id,opened_at,opening_amount").single(); if (data) setCash((current) => [{ id: data.id, openedAt: data.opened_at, openingAmount: Number(data.opening_amount) }, ...current]); }
-  async function closeCash() { if (!activeCash || !supabase) return; const value = Number(window.prompt("Valor contado no caixa:", String(activeCash.openingAmount + revenue))?.replace(",", ".") ?? 0); if (!Number.isFinite(value)) return; const { data: auth } = await supabase.auth.getUser(); const closedAt = new Date().toISOString(); const { error } = await supabase.from("cash_sessions").update({ closed_by: auth.user?.id, closed_at: closedAt, closing_amount: value }).eq("id", activeCash.id); if (!error) setCash((current) => current.map((session) => session.id === activeCash.id ? { ...session, closedAt, closingAmount: value } : session)); }
+  async function saveCash(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!supabase || !cashAction) return;
+    const form = new FormData(event.currentTarget);
+    const value = Number(String(form.get("amount") ?? "0").replace(",", "."));
+    if (!Number.isFinite(value) || value < 0) return;
+    const { data: auth } = await supabase.auth.getUser();
+    if (!auth.user) return;
+    if (cashAction === "open") {
+      const { data } = await supabase.from("cash_sessions").insert({ store_id: "10000000-0000-4000-8000-000000000001", opened_by: auth.user.id, opening_amount: value }).select("id,opened_at,opening_amount").single();
+      if (data) setCash((current) => [{ id: data.id, openedAt: data.opened_at, openingAmount: Number(data.opening_amount) }, ...current]);
+    } else if (activeCash) {
+      const closedAt = new Date().toISOString();
+      const { error } = await supabase.from("cash_sessions").update({ closed_by: auth.user.id, closed_at: closedAt, closing_amount: value }).eq("id", activeCash.id);
+      if (!error) setCash((current) => current.map((session) => session.id === activeCash.id ? { ...session, closedAt, closingAmount: value } : session));
+    }
+    setCashAction(null);
+  }
 
   if (view === "kitchen") {
     const columns: { status: OrderStatus; title: string }[] = [{ status: "confirmed", title: "Aguardando preparo" }, { status: "preparing", title: "Em preparo" }, { status: "ready", title: "Prontos" }];
@@ -26,7 +43,7 @@ export default function Operations({ view }: { view: "dashboard" | "kitchen" | "
 
   if (view === "cash") {
     const payment = (method: Order["paymentMethod"]) => completed.filter((order) => order.paymentMethod === method).reduce((sum, order) => sum + order.total, 0);
-    return <section className="content cash-page"><div className="title-row"><div><p className="eyebrow">FINANCEIRO DO DIA</p><h1>Caixa e relatórios</h1><p>Acompanhe recebimentos e fechamento diário.</p></div>{activeCash ? <button className="close-cash" onClick={closeCash}>Fechar caixa</button> : <button className="primary" onClick={openCash}><Banknote size={17} /> Abrir caixa</button>}</div><div className={`cash-status ${activeCash ? "open" : "closed"}`}><div><Banknote /><span>{activeCash ? "Caixa aberto" : "Caixa fechado"}<small>{activeCash ? `Aberto às ${new Date(activeCash.openedAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}` : "Abra o caixa para iniciar o movimento"}</small></span></div>{activeCash && <strong>Fundo: {money.format(activeCash.openingAmount)}</strong>}</div><div className="payment-cards"><article><Banknote /><span>Dinheiro<strong>{money.format(payment("cash"))}</strong></span></article><article><QrCode /><span>PIX<strong>{money.format(payment("pix"))}</strong></span></article><article><CreditCard /><span>Cartões<strong>{money.format(payment("card"))}</strong></span></article><article><BarChart3 /><span>Total recebido<strong>{money.format(revenue)}</strong></span></article></div><div className="report-table"><header><h2>Pedidos finalizados hoje</h2><span>{completed.length} vendas</span></header>{completed.length === 0 ? <p className="no-sales">Ainda não existem pedidos entregues hoje.</p> : completed.map((order) => <div key={order.id}><span>#{String(order.number).padStart(3, "0")}</span><b>{order.customerName}</b><span>{order.paymentMethod === "pix" ? "PIX" : order.paymentMethod === "cash" ? "Dinheiro" : "Cartão"}</span><strong>{money.format(order.total)}</strong></div>)}</div></section>;
+    return <><section className="content cash-page"><div className="title-row"><div><p className="eyebrow">FINANCEIRO DO DIA</p><h1>Caixa e relatórios</h1><p>Acompanhe recebimentos e fechamento diário.</p></div>{activeCash ? <button className="close-cash" onClick={() => setCashAction("close")}>Fechar caixa</button> : <button className="primary" onClick={() => setCashAction("open")}><Banknote size={17} /> Abrir caixa</button>}</div><div className={`cash-status ${activeCash ? "open" : "closed"}`}><div><Banknote /><span>{activeCash ? "Caixa aberto" : "Caixa fechado"}<small>{activeCash ? `Aberto às ${new Date(activeCash.openedAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}` : "Abra o caixa para iniciar o movimento"}</small></span></div>{activeCash && <strong>Fundo: {money.format(activeCash.openingAmount)}</strong>}</div><div className="payment-cards"><article><Banknote /><span>Dinheiro<strong>{money.format(payment("cash"))}</strong></span></article><article><QrCode /><span>PIX<strong>{money.format(payment("pix"))}</strong></span></article><article><CreditCard /><span>Cartões<strong>{money.format(payment("card"))}</strong></span></article><article><BarChart3 /><span>Total recebido<strong>{money.format(revenue)}</strong></span></article></div><div className="report-table"><header><h2>Pedidos finalizados hoje</h2><span>{completed.length} vendas</span></header>{completed.length === 0 ? <p className="no-sales">Ainda não existem pedidos entregues hoje.</p> : completed.map((order) => <div key={order.id}><span>#{String(order.number).padStart(3, "0")}</span><b>{order.customerName}</b><span>{order.paymentMethod === "pix" ? "PIX" : order.paymentMethod === "cash" ? "Dinheiro" : "Cartão"}</span><strong>{money.format(order.total)}</strong></div>)}</div></section>{cashAction && <div className="modal-backdrop" role="presentation" onMouseDown={() => setCashAction(null)}><form className="modal compact-modal" onSubmit={saveCash} onMouseDown={(event) => event.stopPropagation()}><h2>{cashAction === "open" ? "Abrir caixa" : "Fechar caixa"}</h2><p>{cashAction === "open" ? "Informe o valor inicial disponível." : "Informe o valor contado no caixa."}</p><label>Valor (R$)<input name="amount" type="number" min="0" step="0.01" defaultValue={cashAction === "open" ? 150 : activeCash ? activeCash.openingAmount + revenue : revenue} autoFocus required /></label><footer><button type="button" onClick={() => setCashAction(null)}>Cancelar</button><button className="primary" type="submit">Confirmar</button></footer></form></div>}</>;
   }
 
   const maxRevenue = Math.max(1, orderedRevenue);
