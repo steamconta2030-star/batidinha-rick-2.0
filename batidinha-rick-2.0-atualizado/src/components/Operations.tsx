@@ -5,19 +5,88 @@ import { supabase } from "../lib/supabase";
 import type { CashSession, Order, OrderStatus } from "../types";
 const money = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 
+function localDateKey(value: string | Date) {
+  const date = typeof value === "string" ? new Date(value) : value;
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function cashErrorMessage(error: unknown, fallback: string) {
+  if (error && typeof error === "object" && "message" in error && typeof error.message === "string") {
+    return `${fallback}\n\nDetalhes: ${error.message}`;
+  }
+  return fallback;
+}
+
 export default function Operations({ view }: { view: "dashboard" | "kitchen" | "cash" }) {
   const { orders, updateStatus } = useOnlineOrders();
   const [cash, setCash] = useState<CashSession[]>([]);
-  useEffect(() => { supabase?.from("cash_sessions").select("id,opened_at,opening_amount,closed_at,closing_amount").order("opened_at", { ascending: false }).then(({ data }) => { if (data) setCash(data.map((row) => ({ id: row.id, openedAt: row.opened_at, openingAmount: Number(row.opening_amount), closedAt: row.closed_at ?? undefined, closingAmount: row.closing_amount ? Number(row.closing_amount) : undefined }))); }); }, []);
-  const today = new Date().toISOString().slice(0, 10);
-  const todayOrders = orders.filter((order) => order.createdAt.slice(0, 10) === today && order.status !== "cancelled");
+  useEffect(() => {
+    supabase?.from("cash_sessions").select("id,opened_at,opening_amount,closed_at,closing_amount").order("opened_at", { ascending: false }).then(({ data, error }) => {
+      if (error) {
+        window.alert(cashErrorMessage(error, "Não foi possível carregar o histórico do caixa."));
+        return;
+      }
+      if (data) setCash(data.map((row) => ({ id: row.id, openedAt: row.opened_at, openingAmount: Number(row.opening_amount), closedAt: row.closed_at ?? undefined, closingAmount: row.closing_amount ? Number(row.closing_amount) : undefined })));
+    });
+  }, []);
+  const today = localDateKey(new Date());
+  const todayOrders = orders.filter((order) => localDateKey(order.createdAt) === today && order.status !== "cancelled");
   const completed = todayOrders.filter((order) => order.status === "delivered");
   const revenue = completed.reduce((sum, order) => sum + order.total, 0);
   const orderedRevenue = todayOrders.reduce((sum, order) => sum + order.total, 0);
   const activeCash = cash.find((session) => !session.closedAt);
   function move(id: string, status: OrderStatus) { updateStatus(id, status); }
-  async function openCash() { const value = Number(window.prompt("Valor inicial do caixa:", "150")?.replace(",", ".") ?? 0); if (!supabase || !Number.isFinite(value)) return; const { data: auth } = await supabase.auth.getUser(); if (!auth.user) return; const { data } = await supabase.from("cash_sessions").insert({ store_id: "10000000-0000-4000-8000-000000000001", opened_by: auth.user.id, opening_amount: value }).select("id,opened_at,opening_amount").single(); if (data) setCash((current) => [{ id: data.id, openedAt: data.opened_at, openingAmount: Number(data.opening_amount) }, ...current]); }
-  async function closeCash() { if (!activeCash || !supabase) return; const value = Number(window.prompt("Valor contado no caixa:", String(activeCash.openingAmount + revenue))?.replace(",", ".") ?? 0); if (!Number.isFinite(value)) return; const { data: auth } = await supabase.auth.getUser(); const closedAt = new Date().toISOString(); const { error } = await supabase.from("cash_sessions").update({ closed_by: auth.user?.id, closed_at: closedAt, closing_amount: value }).eq("id", activeCash.id); if (!error) setCash((current) => current.map((session) => session.id === activeCash.id ? { ...session, closedAt, closingAmount: value } : session)); }
+
+  async function openCash() {
+    const raw = window.prompt("Valor inicial do caixa:", "150");
+    if (raw === null) return;
+    const value = Number(raw.replace(",", "."));
+    if (!Number.isFinite(value) || value < 0) {
+      window.alert("Informe um valor inicial válido para o caixa.");
+      return;
+    }
+    if (!supabase) {
+      window.alert("O caixa online exige conexão com o Supabase.");
+      return;
+    }
+    const { data: auth, error: authError } = await supabase.auth.getUser();
+    if (authError || !auth.user) {
+      window.alert(cashErrorMessage(authError, "Não foi possível identificar o usuário responsável pela abertura do caixa."));
+      return;
+    }
+    const { data, error } = await supabase.from("cash_sessions").insert({ store_id: "10000000-0000-4000-8000-000000000001", opened_by: auth.user.id, opening_amount: value }).select("id,opened_at,opening_amount").single();
+    if (error || !data) {
+      window.alert(cashErrorMessage(error, "Não foi possível abrir o caixa."));
+      return;
+    }
+    setCash((current) => [{ id: data.id, openedAt: data.opened_at, openingAmount: Number(data.opening_amount) }, ...current]);
+  }
+
+  async function closeCash() {
+    if (!activeCash || !supabase) return;
+    const raw = window.prompt("Valor contado no caixa:", String(activeCash.openingAmount + revenue));
+    if (raw === null) return;
+    const value = Number(raw.replace(",", "."));
+    if (!Number.isFinite(value) || value < 0) {
+      window.alert("Informe um valor contado válido para fechar o caixa.");
+      return;
+    }
+    const { data: auth, error: authError } = await supabase.auth.getUser();
+    if (authError || !auth.user) {
+      window.alert(cashErrorMessage(authError, "Não foi possível identificar o usuário responsável pelo fechamento do caixa."));
+      return;
+    }
+    const closedAt = new Date().toISOString();
+    const { error } = await supabase.from("cash_sessions").update({ closed_by: auth.user.id, closed_at: closedAt, closing_amount: value }).eq("id", activeCash.id);
+    if (error) {
+      window.alert(cashErrorMessage(error, "Não foi possível fechar o caixa. Ele continuará aberto."));
+      return;
+    }
+    setCash((current) => current.map((session) => session.id === activeCash.id ? { ...session, closedAt, closingAmount: value } : session));
+  }
 
   if (view === "kitchen") {
     const columns: { status: OrderStatus; title: string }[] = [{ status: "confirmed", title: "Aguardando preparo" }, { status: "preparing", title: "Em preparo" }, { status: "ready", title: "Prontos" }];
