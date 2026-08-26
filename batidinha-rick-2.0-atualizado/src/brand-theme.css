@@ -1,0 +1,345 @@
+:root {
+  --rick-ink: #2a102e;
+  --rick-deep: #35113f;
+  --rick-purple: #64166f;
+  --rick-magenta: #a51886;
+  --rick-pink: #d638a4;
+  --rick-rose: #f4d9ea;
+  --rick-gold: #f4b83f;
+  --rick-cream: #fff9f4;
+  --rick-paper: #fffdf9;
+  --rick-soft: #f8eff6;
+  --rick-border: #ead9e7;
+  --rick-muted: #806b80;
+  --rick-success: #238a57;
+  color: var(--rick-ink);
+  background: var(--rick-cream);
+}
+
+body { background: var(--rick-cream); color: var(--rick-ink); }
+
+/* ---------- Global controls ---------- */
+.primary,
+.public-hero button,
+.menu-card footer button,
+.builder-footer button,
+.cart-footer button,
+.checkout-form button[type="submit"],
+.order-success > button,
+.pix-payment-panel button {
+  background: linear-gradient(135deg, var(--rick-magenta), var(--rick-purple)) !important;
+  color: #fff !important;
+  border-color: transparent !important;
+  box-shadow: 0 10px 22px rgba(105, 22, 111, .18) !important;
+}
+.primary:hover,
+.public-hero button:hover,
+.menu-card footer button:hover,
+.builder-footer button:hover,
+.cart-footer button:hover,
+.checkout-form button[type="submit"]:hover,
+.order-success > button:hover,
+.pix-payment-panel button:hover {
+  background: linear-gradient(135deg, #bb1d94, #74177e) !important;
+}
+
+.eyebrow,
+.menu-title small,
+.product-body small,
+.settings-card small,
+.simulation-summary > span,
+.pizza-builder header small,
+.public-hero small {
+  color: var(--rick-magenta) !important;
+}
+
+input:focus, textarea:focus, select:focus,
+.modal input:focus, .modal textarea:focus, .modal select:focus,
+.toolbar select:focus {
+  border-color: var(--rick-magenta) !important;
+  box-shadow: 0 0 0 3px rgba(165, 24, 134, .12) !important;
+}
+
+/* ---------- Admin shell ---------- */
+.sidebar {
+  background: linear-gradient(180deg, #24102a 0%, #37123e 100%) !important;
+  color: #fff8fd !important;
+}
+.brand-mark {
+  background: linear-gradient(145deg, var(--rick-pink), var(--rick-purple)) !important;
+  color: white !important;
+  box-shadow: 0 9px 24px rgba(165, 24, 134, .28);
+}
+.brand strong { color: #fff !important; }
+.brand small { color: #dcc7df !important; }
+nav button { color: #d8c1dd !important; }
+nav button:hover,
+nav button.active {
+  background: rgba(216, 56, 164, .16) !important;
+  color: #fff !important;
+}
+.wave-card {
+  border-color: rgba(244, 184, 63, .22) !important;
+  background: rgba(255,255,255,.055) !important;
+}
+.wave-card small { color: var(--rick-gold) !important; }
+.wave-card span { color: #d3bed6 !important; }
+.wave-card div { background: rgba(255,255,255,.12) !important; }
+.wave-card i { background: linear-gradient(90deg, var(--rick-pink), var(--rick-gold)) !important; }
+
+.topbar {
+  background: var(--rick-paper) !important;
+  border-bottom-color: var(--rick-border) !important;
+}
+.data-status { background: var(--rick-soft) !important; color: var(--rick-purple) !important; }
+.store-status {
+  border-color: #cce8d9 !important;
+  background: #f1fbf6 !important;
+  color: var(--rick-success) !important;
+}
+
+.content { color: var(--rick-ink); }
+.title-row h1,
+.stats strong,
+.product-body h2,
+.settings-card h2 { color: var(--rick-ink) !important; }
+.title-row p,
+.stats span,
+.product-body p,
+.settings-card p { color: var(--rick-muted) !important; }
+
+.stats article,
+.product-card,
+.settings-card,
+.store-settings-card,
+.modal,
+.toolbar label,
+.toolbar select {
+  background: var(--rick-paper) !important;
+  border-color: var(--rick-border) !important;
+}
+.product-card { box-shadow: 0 10px 28px rgba(61, 20, 69, .06) !important; }
+.product-image { background: linear-gradient(145deg, #faedf7, #f4e6f3) !important; color: var(--rick-magenta) !important; }
+.product-body footer { border-top-color: var(--rick-border) !important; }
+.product-body footer button,
+.icon-action {
+  color: var(--rick-magenta) !important;
+  border-color: var(--rick-border) !important;
+  background: #fff !important;
+}
+
+/* ---------- Builder / customization ---------- */
+.settings-grid,
+.pizza-builder,
+.builder-body { color: var(--rick-ink) !important; }
+.step-number,
+.pizza-builder h3 > span {
+  background: #f4dff0 !important;
+  color: var(--rick-magenta) !important;
+}
+.size-list button,
+.flavor-list button,
+.option-chips button,
+.builder-sizes button,
+.builder-flavors button {
+  background: var(--rick-paper) !important;
+  border-color: var(--rick-border) !important;
+  color: var(--rick-ink) !important;
+}
+.size-list button.selected,
+.flavor-list button.selected,
+.option-chips button.selected,
+.builder-sizes button.selected,
+.builder-flavors button.selected {
+  border-color: var(--rick-magenta) !important;
+  background: #fff0fa !important;
+  box-shadow: 0 0 0 2px rgba(165, 24, 134, .10) !important;
+}
+.selected .check,
+.builder-flavors .selected i {
+  background: var(--rick-magenta) !important;
+  border-color: var(--rick-magenta) !important;
+  color: white !important;
+}
+
+/* Remove the old red/brown pizza visual completely. */
+.pizza-visual {
+  background: radial-gradient(circle at 50% 35%, #fceaf7 0%, #ead7ef 58%, #5f176b 100%) !important;
+}
+.pizza-visual > div {
+  border-radius: 28% 28% 34% 34% / 18% 18% 42% 42% !important;
+  border: 5px solid #f4c8e5 !important;
+  background:
+    radial-gradient(circle at 33% 30%, #f7a8cb 0 5%, transparent 6%),
+    radial-gradient(circle at 63% 42%, #c82479 0 6%, transparent 7%),
+    radial-gradient(circle at 46% 68%, #ffccda 0 5%, transparent 6%),
+    linear-gradient(160deg, #f7a9ca 0%, #d9459f 48%, #8c247e 100%) !important;
+  box-shadow: inset 0 0 0 3px rgba(255,255,255,.35), 0 14px 34px rgba(58, 15, 65, .34) !important;
+  aspect-ratio: .68 !important;
+  width: 112px !important;
+}
+.pizza-visual > div::before {
+  content: "";
+  position: absolute;
+  width: 45%;
+  height: 8%;
+  left: 27.5%;
+  top: -9%;
+  border-radius: 9px 9px 4px 4px;
+  background: var(--rick-gold);
+}
+.pizza-visual > div i { display: none !important; }
+.pizza-visual > span { background: rgba(42, 16, 46, .82) !important; color: #fff !important; }
+.simulator {
+  background: linear-gradient(180deg, #2a102e 0%, #43134d 100%) !important;
+  color: #fff9fd !important;
+  box-shadow: 0 20px 50px rgba(43, 12, 50, .24) !important;
+}
+.simulator-heading { color: #f2a9da !important; }
+.simulation-summary p { color: #d7c2da !important; }
+.price-rule { background: rgba(255,255,255,.07) !important; color: #f0d7ed !important; }
+
+/* ---------- Public storefront ---------- */
+.public-menu {
+  background: linear-gradient(180deg, #fffaf6 0%, #f9f0f6 100%) !important;
+  color: var(--rick-ink) !important;
+}
+.public-header {
+  background: rgba(255, 252, 248, .97) !important;
+  border-bottom-color: var(--rick-border) !important;
+}
+.public-brand strong { color: var(--rick-ink) !important; }
+.public-brand small { color: #9a3b82 !important; }
+.public-brand > span {
+  background: linear-gradient(145deg, var(--rick-pink), var(--rick-purple)) !important;
+  color: #fff !important;
+}
+.cart-button {
+  background: linear-gradient(135deg, var(--rick-magenta), var(--rick-deep)) !important;
+  color: #fff !important;
+  border-color: transparent !important;
+}
+.cart-button span { background: #fff !important; color: var(--rick-magenta) !important; }
+.public-header .back-admin { color: #aa91ab !important; }
+.public-header .back-admin:hover {
+  color: var(--rick-magenta) !important;
+  background: #fff0fa !important;
+  border-color: #ead5e7 !important;
+}
+
+.public-hero {
+  background:
+    radial-gradient(circle at 18% 20%, rgba(216, 56, 164, .18), transparent 34%),
+    linear-gradient(120deg, #220a2b 0%, #42104f 48%, #86126f 100%) !important;
+}
+.public-hero::before {
+  background: linear-gradient(90deg, rgba(28, 7, 35, .96) 0%, rgba(48, 9, 57, .83) 47%, rgba(57, 8, 60, .13) 78%) !important;
+}
+.public-hero small { color: var(--rick-gold) !important; }
+.public-hero h1,
+.public-hero p { color: #fff !important; }
+.public-hero h1 { text-shadow: 0 4px 26px rgba(15, 0, 19, .34) !important; }
+
+.category-pills {
+  background: rgba(255, 250, 247, .98) !important;
+  border-bottom-color: var(--rick-border) !important;
+}
+.category-pills button {
+  background: #fff !important;
+  border-color: #e5d5e4 !important;
+  color: #553050 !important;
+}
+.category-pills button.active {
+  background: linear-gradient(135deg, var(--rick-pink), var(--rick-magenta)) !important;
+  color: #fff !important;
+  border-color: transparent !important;
+  box-shadow: 0 8px 18px rgba(165, 24, 134, .18);
+}
+
+.menu-title small { color: var(--rick-magenta) !important; }
+.menu-title h2 { color: var(--rick-ink) !important; }
+.menu-card {
+  background: rgba(255, 253, 250, .97) !important;
+  border-color: var(--rick-border) !important;
+  box-shadow: 0 14px 34px rgba(62, 14, 70, .07) !important;
+}
+.menu-card:hover {
+  border-color: #d6afd1 !important;
+  box-shadow: 0 22px 46px rgba(62, 14, 70, .13) !important;
+}
+.menu-card small { color: var(--rick-magenta) !important; }
+.menu-card h3 { color: var(--rick-ink) !important; }
+.menu-card p { color: var(--rick-muted) !important; }
+.menu-card footer strong { color: var(--rick-magenta) !important; }
+.menu-photo { background: linear-gradient(145deg, #f9eaf5, #f1e2ef) !important; }
+
+/* Replace any pizza illustration card with a Batidinha-colored abstract bottle panel. */
+.pizza-photo {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(145deg, #2b0d34, #731469) !important;
+}
+.pizza-photo::before {
+  content: "";
+  display: block;
+  width: 92px;
+  height: 146px;
+  margin: 28px auto 0;
+  border-radius: 22px 22px 30px 30px;
+  background:
+    radial-gradient(circle at 32% 28%, #ffc3d9 0 5%, transparent 6%),
+    radial-gradient(circle at 68% 50%, #d82585 0 7%, transparent 8%),
+    linear-gradient(155deg, #f7a4ca, #c83299 60%, #7b236f);
+  border: 5px solid rgba(255,255,255,.58);
+  box-shadow: 0 16px 35px rgba(24,0,28,.32);
+}
+.pizza-photo::after {
+  content: "";
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  width: 46px;
+  height: 16px;
+  transform: translateX(-50%);
+  background: var(--rick-gold);
+  border-radius: 7px 7px 4px 4px;
+}
+.pizza-photo > * { position: relative; z-index: 2; }
+
+/* ---------- Overlays, checkout and payment ---------- */
+.menu-overlay,
+.modal-backdrop { background: rgba(30, 7, 35, .72) !important; }
+.pizza-builder,
+.cart-drawer,
+.checkout-card,
+.order-success,
+.pix-payment-panel {
+  background: var(--rick-paper) !important;
+  color: var(--rick-ink) !important;
+  border-color: var(--rick-border) !important;
+}
+.pizza-builder header,
+.cart-drawer header,
+.checkout-card header { border-bottom-color: var(--rick-border) !important; }
+
+.order-success {
+  box-shadow: 0 30px 90px rgba(36, 7, 42, .30) !important;
+}
+.order-success svg { color: var(--rick-success) !important; }
+.pix-payment-panel { background: #fff8fc !important; }
+.pix-payment-panel textarea {
+  border-color: var(--rick-border) !important;
+  color: var(--rick-ink) !important;
+}
+
+/* ---------- Status / accents ---------- */
+.available { background: #eaf8f0 !important; color: #23754d !important; }
+.unavailable { background: #eee8ef !important; color: #756477 !important; }
+.offline-banner { background: #fff1d8 !important; color: #754e00 !important; }
+.store-closed-banner { background: #f9e7f2 !important; color: #762159 !important; }
+
+@media (max-width: 760px) {
+  .public-hero::before {
+    background: linear-gradient(90deg, rgba(28, 7, 35, .97), rgba(58, 9, 64, .72)) !important;
+  }
+}
