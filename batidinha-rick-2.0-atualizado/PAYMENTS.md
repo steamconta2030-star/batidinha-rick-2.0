@@ -22,7 +22,8 @@ A credencial deve existir somente nos Secrets das Supabase Edge Functions.
 5. Aplique a migration `005_payments.sql`.
 6. Publique as duas Edge Functions.
 7. No Mercado Pago, configure notificações do tópico `order` apontando para a URL pública da função `mercadopago-webhook`.
-8. Teste integralmente antes de trocar para credenciais de produção.
+8. No Vercel, disponibilize `VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY` também para o ambiente Preview antes de testar branches de integração.
+9. Teste integralmente antes de trocar para credenciais de produção.
 
 ## Fluxo
 
@@ -33,20 +34,16 @@ A credencial deve existir somente nos Secrets das Supabase Edge Functions.
 5. A resposta fornece QR Code/Copia e Cola/link para pagamento.
 6. O pedido permanece com `payment_status = pending`.
 7. O Mercado Pago envia uma notificação quando o estado muda.
-8. O webhook não confia no status recebido: consulta `/v1/orders/{id}` no Mercado Pago e então atualiza o banco.
+8. O webhook valida a assinatura da notificação e também reconsulta `/v1/orders/{id}` no Mercado Pago antes de atualizar o banco.
 9. Quando a order estiver `processed/accredited`, o pedido recebe `payment_status = paid` e `paid_at`.
 
 ## Próxima etapa
 
-Integrar a tela de checkout do React para:
+Validar o fluxo completo em ambiente de teste:
 
-- pedir e-mail do pagador quando Pix online for escolhido;
-- chamar `create-pix-payment` depois que o pedido for criado;
-- exibir QR Code, Copia e Cola e tempo de expiração;
-- acompanhar `payment_status` em tempo real;
-- diferenciar claramente `payment_method` de `payment_status`;
-- definir a regra operacional: pedidos Pix só devem entrar na produção automaticamente depois de `paid`.
-
-## Observação sobre webhook
-
-Antes da produção, adicionar validação da assinatura/autenticidade da notificação conforme a configuração de Webhooks utilizada na aplicação Mercado Pago, além da reconsulta já implementada ao provedor.
+- pedido gravado no Supabase;
+- criação da cobrança Pix;
+- exibição do QR Code/Copia e Cola;
+- recebimento do webhook;
+- atualização de `payment_status` para `paid`;
+- regra operacional para liberar pedidos Pix à produção apenas depois do pagamento.
