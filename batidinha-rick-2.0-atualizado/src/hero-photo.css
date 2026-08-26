@@ -1,0 +1,12 @@
+.public-hero::after{
+  background-image:url('https://images.pexels.com/photos/4443477/pexels-photo-4443477.jpeg?auto=compress&dpr=1&h=900&w=1200')!important;
+  background-size:cover!important;
+  background-position:58% 52%!important;
+  filter:saturate(1.08) contrast(1.04) brightness(.82)!important;
+}
+.public-hero::before{
+  background:linear-gradient(90deg,rgba(27,6,32,.99) 0%,rgba(43,7,48,.96) 37%,rgba(50,5,50,.60) 57%,rgba(38,3,39,.10) 78%)!important;
+}
+@media(max-width:700px){
+  .public-hero::after{background-position:54% 50%!important;filter:saturate(1.06) contrast(1.03) brightness(.72)!important}
+}
