@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
-import { ArrowLeft, Check, CheckCircle2, Flame, MessageCircle, Minus, Plus, ShoppingBag, Trash2, X } from "lucide-react";
+import { ArrowLeft, Check, CheckCircle2, Copy, Flame, MessageCircle, Minus, Plus, QrCode, ShoppingBag, Trash2, X } from "lucide-react";
 import { initialZones } from "../data/delivery";
 import { usePersistentState } from "../hooks/usePersistentState";
 import { useOnlineMenu } from "../hooks/useOnlineMenu";
@@ -9,6 +9,15 @@ import { checkoutSchema } from "../validation/order";
 import type { CartItem, Order, Product } from "../types";
 
 const money = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+
+type PixPayment = {
+  providerOrderId: string;
+  status: string;
+  statusDetail?: string | null;
+  ticketUrl?: string | null;
+  qrCode?: string | null;
+  qrCodeBase64?: string | null;
+};
 
 export default function PublicMenu({ onBack }: { onBack: () => void }) {
   const { products, categories, sizes, flavors, crusts, extras, zones, online, storeOpen, minimumOrder, whatsapp } = useOnlineMenu();
@@ -19,6 +28,8 @@ export default function PublicMenu({ onBack }: { onBack: () => void }) {
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [completedOrder, setCompletedOrder] = useState<Order | null>(null);
+  const [pixPayment, setPixPayment] = useState<PixPayment | null>(null);
+  const [pixError, setPixError] = useState("");
   const [checkoutDeliveryType, setCheckoutDeliveryType] = useState<"delivery" | "pickup">("delivery");
   const [checkoutZoneId, setCheckoutZoneId] = useState(initialZones[0].id);
   const [sizeId, setSizeId] = useState("individual");
@@ -57,6 +68,15 @@ export default function PublicMenu({ onBack }: { onBack: () => void }) {
     setCart((current) => { const existing = current.find((item) => item.id === product.id); return existing ? current.map((item) => item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item) : [...current, { id: product.id, name: product.name, detail: product.description, price: product.price, quantity: 1, source: { kind: "product", productId: product.id } }]; });
   }
   function quantity(id: string, delta: number) { setCart((current) => current.map((item) => item.id === id ? { ...item, quantity: item.quantity + delta } : item).filter((item) => item.quantity > 0)); }
+
+  async function createPixPayment(orderId: string, payerEmail: string) {
+    if (!supabase) return null;
+    const { data, error } = await supabase.functions.invoke("create-pix-payment", { body: { orderId, payerEmail } });
+    if (error) throw error;
+    if (!data || data.error) throw new Error(data?.error ?? "Não foi possível gerar o Pix.");
+    return data as PixPayment;
+  }
+
   async function finishOrder(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); const data = new FormData(event.currentTarget);
     if (!storeOpen) { window.alert("A Batidinha do Rick está fechada para novos pedidos no momento."); return; }
@@ -70,7 +90,14 @@ export default function PublicMenu({ onBack }: { onBack: () => void }) {
     });
     if (!parsed.success) { window.alert(parsed.error.issues[0]?.message ?? "Confira os dados do pedido."); return; }
     const checkout = parsed.data;
+    const payerEmail = String(data.get("payerEmail") ?? "").trim();
+    if (checkout.paymentMethod === "pix" && !/^\S+@\S+\.\S+$/.test(payerEmail)) {
+      window.alert("Informe um e-mail válido para gerar o pagamento Pix.");
+      return;
+    }
     const draft: Order = { id: crypto.randomUUID(), number: Math.max(0, ...orders.map((item) => item.number)) + 1, customerName: checkout.name, phone: checkout.phone, deliveryType, address: deliveryType === "delivery" ? `${checkout.address} • ${zoneName}` : "", paymentMethod: checkout.paymentMethod, changeFor: checkout.changeFor || undefined, notes: checkout.notes, items: cart, subtotal: cartTotal, deliveryFee, total: cartTotal + deliveryFee, status: "pending", createdAt: new Date().toISOString() };
+    setPixPayment(null);
+    setPixError("");
     if (!supabase || !online) {
       setOrders((current) => [draft, ...current]);
       setCart([]);
@@ -92,9 +119,33 @@ export default function PublicMenu({ onBack }: { onBack: () => void }) {
       const { data: saved, error } = await supabase.rpc("create_public_order", { payload });
       if (error) throw error;
       const order: Order = { ...draft, id: String(saved.id), number: Number(saved.number), subtotal: Number(saved.subtotal), deliveryFee: Number(saved.delivery_fee), total: Number(saved.total), createdAt: String(saved.created_at) };
-      setOrders((current) => [order, ...current.filter((item) => item.id !== order.id)]); setCart([]); setCheckoutOpen(false); setCartOpen(false); setCompletedOrder(order);
+      setOrders((current) => [order, ...current.filter((item) => item.id !== order.id)]);
+      setCart([]);
+      setCheckoutOpen(false);
+      setCartOpen(false);
+      setCompletedOrder(order);
+
+      if (order.paymentMethod === "pix") {
+        try {
+          const payment = await createPixPayment(order.id, payerEmail);
+          setPixPayment(payment);
+        } catch (paymentError) {
+          console.error(paymentError);
+          setPixError(paymentError instanceof Error ? paymentError.message : "Pedido criado, mas não foi possível gerar o Pix agora.");
+        }
+      }
     } catch (error) {
       window.alert(error instanceof Error ? error.message : "Não foi possível enviar o pedido. Tente novamente.");
+    }
+  }
+
+  async function copyPix() {
+    if (!pixPayment?.qrCode) return;
+    try {
+      await navigator.clipboard.writeText(pixPayment.qrCode);
+      window.alert("Código Pix copiado.");
+    } catch {
+      window.prompt("Copie o código Pix:", pixPayment.qrCode);
     }
   }
 
@@ -115,7 +166,7 @@ export default function PublicMenu({ onBack }: { onBack: () => void }) {
 
     {builderOpen && <div className="menu-overlay"><div className="pizza-builder"><header><div><small>MONTE SUA BATIDINHA</small><h2>Personalize seu pedido</h2></div><button onClick={() => setBuilderOpen(false)}><X /></button></header><div className="builder-body"><section><h3><span>1</span> Escolha o tamanho</h3><div className="builder-sizes">{sizes.filter((item) => item.active).map((item) => <button key={item.id} className={sizeId === item.id ? "selected" : ""} onClick={() => { setSizeId(item.id); setFlavorIds((current) => current.slice(0, item.maxFlavors)); }}><strong>{item.name}</strong><small>{item.slices} unidades • {item.maxFlavors} sabor{item.maxFlavors > 1 ? "es" : ""}</small><b>A partir de {money.format(item.basePrice)}</b></button>)}</div></section><section><h3><span>2</span> Escolha até {size.maxFlavors} sabor{size.maxFlavors > 1 ? "es" : ""}</h3><div className="builder-flavors">{flavors.filter((item) => item.active).map((item) => { const selected = flavorIds.includes(item.id); return <button key={item.id} className={selected ? "selected" : ""} onClick={() => selectFlavor(item.id)}><i>{selected && <Check size={14} />}</i><div><strong>{item.name}</strong><small>{item.ingredients}</small></div><b>{money.format(item.priceBySize[sizeId] ?? size.basePrice)}</b></button> })}</div></section><section><h3><span>3</span> Escolha o preparo</h3><div className="builder-options">{crusts.filter((item) => item.active).map((item) => <button key={item.id} className={crustId === item.id ? "selected" : ""} onClick={() => setCrustId(item.id)}>{item.name}<small>{item.price ? `+ ${money.format(item.price)}` : "Sem acréscimo"}</small></button>)}</div></section><section><h3><span>4</span> Adicionais</h3><div className="builder-options">{extras.filter((item) => item.active).map((item) => <button key={item.id} className={extraIds.includes(item.id) ? "selected" : ""} onClick={() => setExtraIds((current) => current.includes(item.id) ? current.filter((id) => id !== item.id) : [...current, item.id])}>{item.name}<small>+ {money.format(item.price)}</small></button>)}</div></section></div><footer className="builder-footer"><div><span>Total da batidinha</span><strong>{money.format(pizzaTotal)}</strong><small>Preço calculado conforme a opção escolhida</small></div><button disabled={!flavorIds.length} onClick={addPizza}><ShoppingBag size={18} /> Adicionar ao carrinho</button></footer></div></div>}
     {cartOpen && <div className="menu-overlay cart-overlay" onMouseDown={() => setCartOpen(false)}><aside className="cart-drawer" onMouseDown={(event) => event.stopPropagation()}><header><div><small>SEU PEDIDO</small><h2>Carrinho</h2></div><button onClick={() => setCartOpen(false)}><X /></button></header><div className="cart-items">{cart.length === 0 ? <div className="empty-cart"><ShoppingBag size={36} /><strong>Seu carrinho está vazio</strong><span>escolha uma batidinha ou outro item do cardápio.</span></div> : cart.map((item) => <article key={item.id}><div><strong>{item.name}</strong><p>{item.detail}</p><b>{money.format(item.price)}</b></div><div className="quantity"><button onClick={() => quantity(item.id, -1)}>{item.quantity === 1 ? <Trash2 size={15} /> : <Minus size={15} />}</button><span>{item.quantity}</span><button onClick={() => quantity(item.id, 1)}><Plus size={15} /></button></div></article>)}</div><footer><div><span>Subtotal</span><strong>{money.format(cartTotal)}</strong></div><button disabled={!cart.length} onClick={() => { setCartOpen(false); setCheckoutOpen(true); }}>Continuar pedido</button><small>Você preencherá os dados antes de confirmar.</small></footer></aside></div>}
-    {checkoutOpen && <div className="menu-overlay"><form className="checkout-card" onSubmit={finishOrder}><header><div><small>FINALIZAR PEDIDO</small><h2>Seus dados</h2></div><button type="button" onClick={() => setCheckoutOpen(false)}><X /></button></header><div className="checkout-body"><div className="checkout-row"><label>Nome completo<input name="name" required placeholder="Como podemos chamar você?" /></label><label>WhatsApp<input name="phone" required inputMode="tel" placeholder="(31) 99999-9999" /></label></div><fieldset><legend>Como deseja receber?</legend><label><input type="radio" name="deliveryType" value="delivery" checked={checkoutDeliveryType === "delivery"} onChange={() => setCheckoutDeliveryType("delivery")} /> Entrega</label><label><input type="radio" name="deliveryType" value="pickup" checked={checkoutDeliveryType === "pickup"} onChange={() => setCheckoutDeliveryType("pickup")} /> Retirar na loja</label></fieldset>{checkoutDeliveryType === "delivery" && <><label>Bairro<select value={checkoutZoneId} onChange={(event) => setCheckoutZoneId(event.target.value)}>{zones.filter((zone) => zone.active).map((zone) => <option key={zone.id} value={zone.id}>{zone.neighborhood} — {zone.fee ? money.format(zone.fee) : "Entrega grátis"}</option>)}</select></label><label>Endereço de entrega<input name="address" required placeholder="Rua, número e referência" /></label></>}<div className="checkout-row"><label>Pagamento<select name="paymentMethod"><option value="pix">PIX</option><option value="cash">Dinheiro</option><option value="card">Cartão na entrega</option></select></label><label>Troco para<input name="changeFor" type="number" min="0" step="0.01" placeholder="Opcional" /></label></div><label>Observações<textarea name="notes" placeholder="Ex.: tocar o interfone, sem cebola..." /></label><div className="checkout-total"><span>Subtotal <b>{money.format(cartTotal)}</b></span><span>{checkoutDeliveryType === "delivery" ? `Entrega${selectedZone ? ` • ${selectedZone.neighborhood}` : ""}` : "Retirada"} <b>{checkoutFee ? money.format(checkoutFee) : "Grátis"}</b></span><strong>Total <b>{money.format(cartTotal + checkoutFee)}</b></strong></div></div><footer><button type="button" onClick={() => { setCheckoutOpen(false); setCartOpen(true); }}>Voltar</button><button className="confirm-order" type="submit">Confirmar pedido</button></footer></form></div>}
-    {completedOrder && <div className="menu-overlay"><div className="order-success"><CheckCircle2 size={58} /><small>PEDIDO RECEBIDO</small><h2>Pedido #{String(completedOrder.number).padStart(3, "0")}</h2><p>Seu pedido já foi enviado para a central da Batidinha do Rick.</p><strong>{money.format(completedOrder.total)}</strong>{whatsapp && <button className="whatsapp-order" onClick={() => confirmOnWhatsapp(completedOrder)}><MessageCircle size={18} /> Confirmar pelo WhatsApp</button>}<button className="back-menu" onClick={() => setCompletedOrder(null)}>Voltar ao cardápio</button></div></div>}
+    {checkoutOpen && <div className="menu-overlay"><form className="checkout-card" onSubmit={finishOrder}><header><div><small>FINALIZAR PEDIDO</small><h2>Seus dados</h2></div><button type="button" onClick={() => setCheckoutOpen(false)}><X /></button></header><div className="checkout-body"><div className="checkout-row"><label>Nome completo<input name="name" required placeholder="Como podemos chamar você?" /></label><label>WhatsApp<input name="phone" required inputMode="tel" placeholder="(31) 99999-9999" /></label></div><label>E-mail para pagamento Pix<input name="payerEmail" type="email" placeholder="voce@email.com" /><small>Obrigatório apenas quando o pagamento for via Pix.</small></label><fieldset><legend>Como deseja receber?</legend><label><input type="radio" name="deliveryType" value="delivery" checked={checkoutDeliveryType === "delivery"} onChange={() => setCheckoutDeliveryType("delivery")} /> Entrega</label><label><input type="radio" name="deliveryType" value="pickup" checked={checkoutDeliveryType === "pickup"} onChange={() => setCheckoutDeliveryType("pickup")} /> Retirar na loja</label></fieldset>{checkoutDeliveryType === "delivery" && <><label>Bairro<select value={checkoutZoneId} onChange={(event) => setCheckoutZoneId(event.target.value)}>{zones.filter((zone) => zone.active).map((zone) => <option key={zone.id} value={zone.id}>{zone.neighborhood} — {zone.fee ? money.format(zone.fee) : "Entrega grátis"}</option>)}</select></label><label>Endereço de entrega<input name="address" required placeholder="Rua, número e referência" /></label></>}<div className="checkout-row"><label>Pagamento<select name="paymentMethod"><option value="pix">PIX online</option><option value="cash">Dinheiro</option><option value="card">Cartão na entrega</option></select></label><label>Troco para<input name="changeFor" type="number" min="0" step="0.01" placeholder="Opcional" /></label></div><label>Observações<textarea name="notes" placeholder="Ex.: tocar o interfone, sem cebola..." /></label><div className="checkout-total"><span>Subtotal <b>{money.format(cartTotal)}</b></span><span>{checkoutDeliveryType === "delivery" ? `Entrega${selectedZone ? ` • ${selectedZone.neighborhood}` : ""}` : "Retirada"} <b>{checkoutFee ? money.format(checkoutFee) : "Grátis"}</b></span><strong>Total <b>{money.format(cartTotal + checkoutFee)}</b></strong></div></div><footer><button type="button" onClick={() => { setCheckoutOpen(false); setCartOpen(true); }}>Voltar</button><button className="confirm-order" type="submit">Confirmar pedido</button></footer></form></div>}
+    {completedOrder && <div className="menu-overlay"><div className="order-success"><CheckCircle2 size={58} /><small>PEDIDO RECEBIDO</small><h2>Pedido #{String(completedOrder.number).padStart(3, "0")}</h2><p>Seu pedido já foi enviado para a central da Batidinha do Rick.</p><strong>{money.format(completedOrder.total)}</strong>{completedOrder.paymentMethod === "pix" && <div className="pix-payment-panel"><QrCode size={28} /><h3>Pagamento via Pix</h3>{pixPayment?.qrCodeBase64 && <img src={`data:image/png;base64,${pixPayment.qrCodeBase64}`} alt="QR Code Pix" />}{pixPayment?.qrCode && <><textarea readOnly value={pixPayment.qrCode} aria-label="Pix Copia e Cola" /><button type="button" onClick={copyPix}><Copy size={17} /> Copiar Pix Copia e Cola</button></>}{pixPayment?.ticketUrl && <a href={pixPayment.ticketUrl} target="_blank" rel="noreferrer">Abrir pagamento Pix</a>}{!pixPayment && !pixError && <p>Gerando cobrança Pix...</p>}{pixError && <p className="admin-login-error" role="alert">Pedido criado, mas o Pix não pôde ser gerado: {pixError}</p>}</div>}{whatsapp && <button className="whatsapp-order" onClick={() => confirmOnWhatsapp(completedOrder)}><MessageCircle size={18} /> Confirmar pelo WhatsApp</button>}<button className="back-menu" onClick={() => { setCompletedOrder(null); setPixPayment(null); setPixError(""); }}>Voltar ao cardápio</button></div></div>}
   </div>;
 }
