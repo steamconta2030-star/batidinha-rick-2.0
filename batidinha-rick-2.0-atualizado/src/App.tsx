@@ -15,6 +15,13 @@ import type { Category, Product } from "./types";
 const money = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 const STORE_ID = "10000000-0000-4000-8000-000000000001";
 
+function errorMessage(error: unknown, fallback: string) {
+  if (error && typeof error === "object" && "message" in error && typeof error.message === "string") {
+    return `${fallback}\n\nDetalhes: ${error.message}`;
+  }
+  return fallback;
+}
+
 export default function App() {
   const [categories, setCategories] = usePersistentState<Category[]>("batidinha:admin:categories", initialCategories);
   const [products, setProducts] = usePersistentState<Product[]>("batidinha:admin:products", initialProducts);
@@ -25,6 +32,7 @@ export default function App() {
   const [storeWhatsapp, setStoreWhatsapp] = usePersistentState("batidinha:admin:whatsapp", "31985011514");
   const [minimumOrder, setMinimumOrder] = usePersistentState("batidinha:admin:minimum-order", 0);
   const [settingsSaved, setSettingsSaved] = useState(false);
+  const [loadingError, setLoadingError] = useState("");
   const [section, setSection] = useState<"dashboard" | "kitchen" | "cash" | "products" | "pizza" | "orders" | "delivery" | "settings" | "public">("public");
 
   const visible = useMemo(() => products.filter((product) => {
@@ -39,9 +47,17 @@ export default function App() {
       supabase.from("products").select("id,category_id,name,description,price,image_path,active").eq("store_id", STORE_ID).order("position"),
       supabase.from("stores").select("accepting_orders,whatsapp,minimum_order").eq("id", STORE_ID).single(),
     ]).then(([categoryResult, productResult, storeResult]) => {
+      const firstError = categoryResult.error ?? productResult.error ?? storeResult.error;
+      if (firstError) {
+        setLoadingError("Não foi possível carregar todos os dados administrativos. Verifique a conexão e tente novamente.");
+      } else {
+        setLoadingError("");
+      }
       if (categoryResult.data) setCategories(categoryResult.data.map((row) => ({ id: row.id, name: row.name, active: row.active })));
       if (productResult.data) setProducts(productResult.data.map((row) => ({ id: row.id, categoryId: row.category_id, name: row.name, description: row.description, price: Number(row.price), imageUrl: row.image_path ?? "", active: row.active })));
       if (storeResult.data) { setStoreOpen(storeResult.data.accepting_orders); setStoreWhatsapp(storeResult.data.whatsapp ?? ""); setMinimumOrder(Number(storeResult.data.minimum_order ?? 0)); }
+    }).catch(() => {
+      setLoadingError("Não foi possível carregar os dados administrativos. Verifique sua conexão.");
     });
   }, []);
 
@@ -50,45 +66,86 @@ export default function App() {
     setProducts((current) => current.map((item) => item.id === id ? { ...item, active: !item.active } : item));
     if (!supabase) return;
     const { error } = await supabase.from("products").update({ active: !product.active, updated_at: new Date().toISOString() }).eq("id", id);
-    if (error) setProducts((current) => current.map((item) => item.id === id ? product : item));
+    if (error) {
+      setProducts((current) => current.map((item) => item.id === id ? product : item));
+      window.alert(errorMessage(error, "Não foi possível alterar a disponibilidade do produto. A mudança foi desfeita."));
+    }
   }
 
   async function addCategory() {
     const name = window.prompt("Nome da nova categoria:")?.trim();
     if (!name) return;
+    if (categories.some((category) => category.name.trim().toLowerCase() === name.toLowerCase())) {
+      window.alert("Já existe uma categoria com esse nome.");
+      return;
+    }
     if (!supabase) {
       setCategories((current) => [...current, { id: crypto.randomUUID(), name, active: true }]);
       return;
     }
     const { data, error } = await supabase.from("categories").insert({ store_id: STORE_ID, name, position: categories.length, active: true }).select("id,name,active").single();
-    if (!error && data) setCategories((current) => [...current, { id: data.id, name: data.name, active: data.active }]);
+    if (error || !data) {
+      window.alert(errorMessage(error, "Não foi possível cadastrar a categoria."));
+      return;
+    }
+    setCategories((current) => [...current, { id: data.id, name: data.name, active: data.active }]);
   }
 
   async function addProduct(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const data = new FormData(event.currentTarget);
-    const input = { store_id: STORE_ID, name: String(data.get("name")), description: String(data.get("description")), category_id: String(data.get("category")), price: Number(data.get("price")), image_path: String(data.get("imageUrl") ?? "") || null, position: products.length, active: true };
+    const form = event.currentTarget;
+    const data = new FormData(form);
+    const input = { store_id: STORE_ID, name: String(data.get("name")).trim(), description: String(data.get("description")).trim(), category_id: String(data.get("category")), price: Number(data.get("price")), image_path: String(data.get("imageUrl") ?? "").trim() || null, position: products.length, active: true };
+    if (!input.name || !input.description || !Number.isFinite(input.price) || input.price < 0) {
+      window.alert("Confira nome, descrição e preço antes de salvar o produto.");
+      return;
+    }
     if (!supabase) {
       setProducts((current) => [...current, { id: crypto.randomUUID(), categoryId: input.category_id, name: input.name, description: input.description, price: input.price, imageUrl: input.image_path ?? "", active: true }]);
       setShowForm(false);
+      form.reset();
       return;
     }
     const { data: saved, error } = await supabase.from("products").insert(input).select("id,category_id,name,description,price,image_path,active").single();
-    if (!error && saved) { setProducts((current) => [...current, { id: saved.id, categoryId: saved.category_id, name: saved.name, description: saved.description, price: Number(saved.price), imageUrl: saved.image_path ?? "", active: saved.active }]); setShowForm(false); }
+    if (error || !saved) {
+      window.alert(errorMessage(error, "Não foi possível cadastrar o produto. Os dados do formulário foram mantidos para nova tentativa."));
+      return;
+    }
+    setProducts((current) => [...current, { id: saved.id, categoryId: saved.category_id, name: saved.name, description: saved.description, price: Number(saved.price), imageUrl: saved.image_path ?? "", active: saved.active }]);
+    setShowForm(false);
+    form.reset();
   }
 
-  async function toggleStore() { const next = !storeOpen; setStoreOpen(next); if (!supabase) return; const { error } = await supabase.from("stores").update({ accepting_orders: next, updated_at: new Date().toISOString() }).eq("id", STORE_ID); if (error) setStoreOpen(!next); }
+  async function toggleStore() {
+    const next = !storeOpen;
+    setStoreOpen(next);
+    if (!supabase) return;
+    const { error } = await supabase.from("stores").update({ accepting_orders: next, updated_at: new Date().toISOString() }).eq("id", STORE_ID);
+    if (error) {
+      setStoreOpen(!next);
+      window.alert(errorMessage(error, `Não foi possível ${next ? "abrir" : "fechar"} a loja. O estado anterior foi restaurado.`));
+    }
+  }
 
   async function saveStoreSettings(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSettingsSaved(false);
+    const digits = storeWhatsapp.replace(/\D/g, "");
+    if (digits && (digits.length < 10 || digits.length > 13)) {
+      window.alert("Informe um WhatsApp válido, com DDD.");
+      return;
+    }
+    if (!Number.isFinite(minimumOrder) || minimumOrder < 0) {
+      window.alert("O pedido mínimo precisa ser zero ou um valor positivo.");
+      return;
+    }
     if (!supabase) {
       setSettingsSaved(true);
       window.setTimeout(() => setSettingsSaved(false), 2500);
       return;
     }
     const { error } = await supabase.from("stores").update({ whatsapp: storeWhatsapp.trim(), minimum_order: minimumOrder, updated_at: new Date().toISOString() }).eq("id", STORE_ID);
-    if (error) { window.alert("Não foi possível salvar as configurações."); return; }
+    if (error) { window.alert(errorMessage(error, "Não foi possível salvar as configurações.")); return; }
     setSettingsSaved(true); window.setTimeout(() => setSettingsSaved(false), 2500);
   }
 
@@ -115,7 +172,7 @@ export default function App() {
       </aside>
 
       <main>
-        <header className="topbar"><div><span>Painel administrativo</span><strong>{sectionTitle}</strong></div><div className="topbar-actions"><span className="data-status" title={isSupabaseConfigured ? "Supabase conectado" : "Os dados ficam salvos neste navegador"}>{isSupabaseConfigured ? <Cloud size={15} /> : <Database size={15} />}{isSupabaseConfigured ? "Nuvem conectada" : "Salvo neste dispositivo"}</span><button className={`store-status ${storeOpen ? "" : "closed"}`} onClick={toggleStore}><i /> {storeOpen ? "Loja aberta" : "Loja fechada"}</button></div></header>
+        <header className="topbar"><div><span>Painel administrativo</span><strong>{sectionTitle}</strong>{loadingError && <small role="alert">{loadingError}</small>}</div><div className="topbar-actions"><span className="data-status" title={isSupabaseConfigured ? "Supabase conectado" : "Os dados ficam salvos neste navegador"}>{isSupabaseConfigured ? <Cloud size={15} /> : <Database size={15} />}{isSupabaseConfigured ? "Nuvem conectada" : "Salvo neste dispositivo"}</span><button className={`store-status ${storeOpen ? "" : "closed"}`} onClick={toggleStore}><i /> {storeOpen ? "Loja aberta" : "Loja fechada"}</button></div></header>
         {section === "dashboard" ? <Operations view="dashboard" /> : section === "kitchen" ? <Operations view="kitchen" /> : section === "cash" ? <Operations view="cash" /> : section === "pizza" ? <PizzaSettings /> : section === "orders" ? <OrdersBoard /> : section === "delivery" ? <DeliverySettings /> : section === "settings" ? <section className="content"><div className="title-row"><div><p className="eyebrow">OPERAÇÃO DA LOJA</p><h1>Configurações comerciais</h1><p>Defina os dados usados no atendimento e no fechamento dos pedidos.</p></div></div><form className="store-settings-card" onSubmit={saveStoreSettings}><div className={`store-operation ${storeOpen ? "open" : "closed"}`}><div><span><Store size={21} /></span><div><strong>{storeOpen ? "Loja aberta" : "Loja fechada"}</strong><small>{storeOpen ? "O cardápio está aceitando novos pedidos." : "Novos pedidos estão temporariamente bloqueados."}</small></div></div><button type="button" onClick={toggleStore}>{storeOpen ? "Fechar loja" : "Abrir loja"}</button></div><label>WhatsApp da loja<input value={storeWhatsapp} onChange={(event) => setStoreWhatsapp(event.target.value)} inputMode="tel" placeholder="Ex.: (31) 99999-9999" /><small>Será utilizado nos próximos recursos de contato com o cliente.</small></label><label>Pedido mínimo<input value={minimumOrder} onChange={(event) => setMinimumOrder(Math.max(0, Number(event.target.value)))} type="number" min="0" step="0.01" /><small>Use zero caso não queira exigir um valor mínimo.</small></label><footer><span>{settingsSaved ? "Configurações salvas com sucesso." : "As alterações serão aplicadas ao cardápio online."}</span><button className="primary" type="submit"><Save size={17} /> Salvar configurações</button></footer></form></section> : <section className="content">
           <div className="title-row"><div><p className="eyebrow">GESTÃO DO CARDÁPIO</p><h1>Produtos</h1><p>Cadastre as batidinhas, combos e adicionais que aparecerão no cardápio.</p></div><button className="primary" onClick={() => setShowForm(true)}><PackagePlus size={18} /> Novo produto</button></div>
 
