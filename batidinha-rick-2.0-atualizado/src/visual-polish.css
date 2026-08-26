@@ -1,0 +1,146 @@
+.public-menu {
+  background: linear-gradient(180deg, #fffaf5 0%, #f8f1ea 100%);
+  min-height: 100vh;
+}
+
+.public-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: rgba(255, 253, 250, .94);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid #eadfd5;
+  box-shadow: 0 8px 30px rgba(70, 42, 27, .06);
+}
+
+.public-header .back-admin {
+  order: 3;
+  border: 0;
+  background: transparent;
+  color: #9a8b82;
+  font-size: 12px;
+  padding: 8px 10px;
+  opacity: .72;
+}
+.public-header .back-admin:hover { opacity: 1; color: #8f2f1f; }
+
+.public-brand > span {
+  background: linear-gradient(145deg, #c23f27, #8e281a);
+  box-shadow: 0 7px 18px rgba(158, 47, 29, .25);
+}
+
+.public-hero {
+  position: relative;
+  overflow: hidden;
+  min-height: 380px;
+  isolation: isolate;
+  background:
+    radial-gradient(circle at 18% 20%, rgba(255, 205, 164, .32), transparent 34%),
+    linear-gradient(120deg, #321c15 0%, #6f2e1f 52%, #b84a2d 100%);
+}
+.public-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background: linear-gradient(90deg, rgba(32, 16, 11, .94) 0%, rgba(54, 24, 16, .8) 48%, rgba(54, 24, 16, .14) 78%);
+}
+.public-hero::after {
+  content: "";
+  position: absolute;
+  top: -10%;
+  right: 2%;
+  width: min(43vw, 540px);
+  height: 120%;
+  z-index: -3;
+  background: url('/images/batidinha-morango.webp') center/cover no-repeat;
+  filter: saturate(1.08) contrast(1.02);
+  transform: rotate(2deg) scale(1.03);
+}
+.public-hero > div:first-child { max-width: 660px; }
+.public-hero h1 {
+  max-width: 640px;
+  text-wrap: balance;
+  text-shadow: 0 3px 24px rgba(0,0,0,.22);
+}
+.public-hero p { max-width: 540px; }
+.public-hero > div:first-child > button {
+  box-shadow: 0 10px 25px rgba(104, 27, 14, .26);
+}
+.hero-pizza { display: none !important; }
+
+.category-pills {
+  scrollbar-width: none;
+  background: rgba(255, 250, 245, .96);
+  border-bottom: 1px solid #eadfd5;
+}
+.category-pills::-webkit-scrollbar { display: none; }
+
+.menu-content { max-width: 1260px; }
+.menu-title h2 { letter-spacing: -.02em; }
+.menu-grid { align-items: stretch; }
+.menu-card {
+  border: 1px solid #eadfd4;
+  box-shadow: 0 12px 30px rgba(64, 39, 25, .07);
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+.menu-card:hover {
+  transform: translateY(-4px);
+  border-color: #dfc7b8;
+  box-shadow: 0 20px 42px rgba(64, 39, 25, .12);
+}
+.menu-photo { height: 210px; background: #eee2d6; }
+.menu-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform .35s ease;
+}
+.menu-card:hover .menu-photo img { transform: scale(1.035); }
+.menu-card footer button { min-width: 42px; min-height: 42px; }
+
+.order-success {
+  border: 1px solid rgba(226, 206, 193, .85);
+  box-shadow: 0 28px 90px rgba(29, 14, 9, .28);
+}
+.pix-payment-panel {
+  border: 1px solid #e2d6ce;
+  background: #fffaf6;
+  border-radius: 18px;
+  padding: 18px;
+  margin-top: 14px;
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+}
+.pix-payment-panel img {
+  width: min(250px, 72vw);
+  border-radius: 12px;
+  background: white;
+  padding: 8px;
+  border: 1px solid #eee2da;
+}
+.pix-payment-panel textarea {
+  width: 100%;
+  min-height: 86px;
+  resize: none;
+  border: 1px solid #ddcfc6;
+  border-radius: 12px;
+  padding: 10px;
+  background: white;
+}
+
+@media (max-width: 760px) {
+  .public-header .back-admin { font-size: 0; width: 38px; }
+  .public-header .back-admin svg { width: 17px; height: 17px; }
+  .public-hero { min-height: 360px; }
+  .public-hero::after {
+    right: -35%;
+    width: 88vw;
+    opacity: .46;
+  }
+  .public-hero::before {
+    background: linear-gradient(90deg, rgba(32, 16, 11, .96), rgba(54, 24, 16, .68));
+  }
+  .menu-photo { height: 190px; }
+}
