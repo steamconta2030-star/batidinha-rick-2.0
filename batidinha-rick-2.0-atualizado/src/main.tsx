@@ -5,6 +5,7 @@ import "./styles.css";
 import "./visual-polish.css";
 import "./brand-theme.css";
 import "./reference-layout.css";
+import "./hero-photo.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
